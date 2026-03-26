@@ -12,14 +12,12 @@ const categories = [
 ];
 
 export default function Marquee() {
-  const items = [...categories, ...categories]; // duplicate for seamless loop
+  // Triple the items for seamless continuous scrolling
+  const items = [...categories, ...categories, ...categories];
 
   return (
     <section className="w-full bg-[#f6f4f1] overflow-hidden relative z-10 border-t border-b border-[#e4ded2]">
-      <div
-        className="flex items-center gap-8 py-5 animate-marquee whitespace-nowrap"
-        style={{ alignSelf: "stretch" }}
-      >
+      <div className="flex items-center gap-8 py-5 whitespace-nowrap marquee-track">
         {items.map((cat, i) => (
           <div key={i} className="flex items-center gap-8 shrink-0">
             <span
@@ -32,6 +30,20 @@ export default function Marquee() {
           </div>
         ))}
       </div>
+
+      <style jsx>{`
+        .marquee-track {
+          animation: marquee-scroll 25s linear infinite;
+        }
+        @keyframes marquee-scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-33.333%);
+          }
+        }
+      `}</style>
     </section>
   );
 }

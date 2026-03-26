@@ -20,6 +20,8 @@ export const metadata: Metadata = {
     "Join a new wave of creators building income, influence, and impact.",
 };
 
+import Footer from "../src/components/Footer";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -37,7 +39,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col font-[var(--font-figtree)]">
-        {children}
+        <div className="flex-1 shrink-0">{children}</div>
+        <Footer />
       </body>
     </html>
   );
