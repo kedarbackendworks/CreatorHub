@@ -7,31 +7,31 @@ import { useCallback } from "react";
 const cards = [
   {
     id: 1,
-    image: "http://localhost:3845/assets/19572ca23798d391baba1b31e63001d76090ec80.png",
+    image: "/assets/images/Frame 2147243604-4.png",
     label: "Fitness • Coaching Program",
     title: "FITFORM PRO FITNESS TRANSFORMATION PROGRAM",
   },
   {
     id: 2,
-    image: "http://localhost:3845/assets/04f16074cc6130aeed6e8bc035ab58451f2406b3.png",
+    image: "/assets/images/Frame 2147243604-3.png",
     label: "Technology • Online Course",
     title: "DEVSTACK HUB FULL STACK DEVELOPMENT COURSE",
   },
   {
     id: 3,
-    image: "http://localhost:3845/assets/fccbab17e94d865e0ddca9b17d872d6002aa1e4e.png",
+    image: "/assets/images/Frame 2147243604-2.png",
     label: "Content • Strategy",
     title: "CREATORFLOW CONTENT GROWTH SYSTEM",
   },
   {
     id: 4,
-    image: "http://localhost:3845/assets/cc1ebff5342533b69f598aa2f9fcace3a2d8450b.png",
+    image: "/assets/images/Frame 2147243604.png",
     label: "Education • Digital Products",
     title: "KNOWLEDGE PACK DIGITAL RESOURCE BUNDLE",
   },
   {
     id: 5,
-    image: "http://localhost:3845/assets/9ca6d9a25c291dd19398fc34e4c7c3532d4a4688.png",
+    image: "/assets/images/Frame 2147243604-1.png",
     label: "Design • Assets",
     title: "CREATIVE DESIGN BUNDLE",
   },

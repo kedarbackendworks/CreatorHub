@@ -7,6 +7,10 @@ import EmpowerBanner from "../src/components/EmpowerBanner";
 import FeaturedCreatorsHeader from "../src/components/FeaturedCreatorsHeader";
 import FeaturedCreatorsCarousel from "../src/components/FeaturedCreatorsCarousel";
 import CreatorsBanner from "../src/components/CreatorsBanner";
+import OurImpact from "../src/components/OurImpact";
+import Pricing from "../src/components/Pricing";
+import MeetTheCreators from "../src/components/MeetTheCreators";
+import OurProcess from "../src/components/OurProcess";
 
 export default function Home() {
   return (
@@ -20,6 +24,10 @@ export default function Home() {
       <FeaturedCreatorsHeader />
       <FeaturedCreatorsCarousel />
       <CreatorsBanner />
+      <OurImpact />
+      <Pricing />
+      <MeetTheCreators />
+      <OurProcess />
     </main>
   );
 }

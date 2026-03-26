@@ -11,7 +11,7 @@ export default function SocialLinks() {
     twitter: '',
     tiktok: ''
   });
-  
+
   const [saving, setSaving] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -21,7 +21,7 @@ export default function SocialLinks() {
 
   const fetchSocialLinks = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/social-links');
+      const res = await axios.get('http://localhost:5001/api/admin/social-links');
       if (res.data) setLinks(res.data);
     } catch (err) {
       console.error(err);
@@ -33,9 +33,9 @@ export default function SocialLinks() {
   const handleSave = async (platform: string) => {
     setSaving(platform);
     try {
-      await axios.post('http://localhost:5000/api/admin/social-links', {
-         platform, 
-         url: links[platform as keyof typeof links]
+      await axios.post('http://localhost:5001/api/admin/social-links', {
+        platform,
+        url: links[platform as keyof typeof links]
       });
       // Optionally show a toast here
     } catch (err) {
@@ -86,7 +86,7 @@ export default function SocialLinks() {
   ];
 
   if (loading) {
-     return <div className="p-8 max-w-5xl mx-auto flex justify-center items-center h-[50vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+    return <div className="p-8 max-w-5xl mx-auto flex justify-center items-center h-[50vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
   }
 
   return (
@@ -105,7 +105,7 @@ export default function SocialLinks() {
           return (
             <div key={platform.id} className="bg-[#111827] border border-slate-800 rounded-2xl p-6 relative overflow-hidden group hover:border-slate-700 transition-colors">
               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${platform.color} opacity-[0.03] rounded-bl-full group-hover:opacity-[0.08] transition-opacity`}></div>
-              
+
               <div className="flex items-center gap-4 mb-6">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${platform.bgColor} ${platform.textColor}`}>
                   <Icon className="w-6 h-6" />
@@ -127,12 +127,12 @@ export default function SocialLinks() {
                   <input
                     type="url"
                     value={links[platform.id as keyof typeof links] || ''}
-                    onChange={(e) => setLinks({...links, [platform.id]: e.target.value})}
+                    onChange={(e) => setLinks({ ...links, [platform.id]: e.target.value })}
                     placeholder={platform.placeholder}
                     className="block w-full pl-10 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-slate-300 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all sm:text-sm"
                   />
                 </div>
-                
+
                 <div className="flex justify-end pt-2 text-sans font-medium">
                   <button
                     onClick={() => handleSave(platform.id)}

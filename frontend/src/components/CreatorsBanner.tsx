@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function CreatorsBanner() {
   return (
     <section className="w-full max-w-[1440px] mx-auto px-5 md:px-[63px] pb-16 md:pb-[140px]">
@@ -24,7 +26,7 @@ export default function CreatorsBanner() {
         </div>
 
         <div className="flex flex-col items-center md:items-end gap-4 shrink-0">
-          <button className="bg-[#f6f4f1] border border-[#ff9465] text-[#1a1a1a] flex items-center justify-center gap-2 px-6 py-4 rounded-full shadow-[8px_8px_20px_0px_rgba(69,9,0,0.16)] hover:bg-white transition-colors duration-300">
+          <Link href="/login" className="bg-[#f6f4f1] border border-[#ff9465] text-[#1a1a1a] flex items-center justify-center gap-2 px-6 py-4 rounded-full shadow-[8px_8px_20px_0px_rgba(69,9,0,0.16)] hover:bg-white transition-colors duration-300">
             <span
               className="font-normal text-[16px]"
               style={{ fontFamily: "'Lexend', sans-serif" }}
@@ -45,7 +47,7 @@ export default function CreatorsBanner() {
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
             </svg>
-          </button>
+          </Link>
           <p
             className="text-[#e4ded2] text-[13px] tracking-[0.26px] font-medium text-center md:text-right"
             style={{ fontFamily: "'Figtree', sans-serif" }}

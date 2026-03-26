@@ -12,7 +12,7 @@ export default function FinancialPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/data');
+        const res = await axios.get('http://localhost:5001/api/admin/data');
         if (res.data) setData(res.data);
       } catch (err) {
         console.error(err);

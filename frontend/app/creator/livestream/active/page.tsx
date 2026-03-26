@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
-import { Camera, Mic, Radio, User, MessageSquare, Send, Smile, MoreVertical, X, Maximize2, Users, Heart } from 'lucide-react';
+import { Camera, Mic, Radio, User, MessageSquare, Send, Smile, MoreVertical, X, Maximize2, Users, Heart, ChevronDown } from 'lucide-react';
 
 export default function ActiveLivestreamPage() {
   const [comment, setComment] = useState('');

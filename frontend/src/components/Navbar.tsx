@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 export default function Navbar() {
   const navLinks = [
     { label: "Home", active: true },
@@ -67,7 +67,8 @@ export default function Navbar() {
         </div>
 
         {/* Join as Creator CTA */}
-        <button
+        <Link
+          href="/login"
           className="flex items-center gap-2 px-4 py-3 rounded-[42px] border border-[#ff9465] bg-[#f6f4f1] text-[#1a1a1a] text-base cursor-pointer hover:shadow-lg transition-shadow"
           style={{
             fontFamily: "'Lexend', sans-serif",
@@ -89,7 +90,7 @@ export default function Navbar() {
             <polyline points="10 17 15 12 10 7" />
             <line x1="15" y1="12" x2="3" y2="12" />
           </svg>
-        </button>
+        </Link>
       </div>
     </nav>
   );

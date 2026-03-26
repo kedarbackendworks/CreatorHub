@@ -7,7 +7,7 @@ import { Search, Download, UserPlus, Eye, Trash2, ChevronLeft, ChevronRight, X, 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -18,7 +18,7 @@ export default function UsersPage() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/admin/data');
+      const res = await axios.get('http://localhost:5001/api/admin/data');
       if (res.data && res.data.users) {
         setUsers(res.data.users);
       }
@@ -31,7 +31,7 @@ export default function UsersPage() {
 
   const deleteUser = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5000/api/admin/user/${id}`);
+      await axios.delete(`http://localhost:5001/api/admin/user/${id}`);
       fetchUsers();
     } catch (error) {
       console.error("Error deleting user", error);
@@ -45,7 +45,7 @@ export default function UsersPage() {
 
   const handleUpdateUser = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/user/${currentUser._id}`, currentUser);
+      await axios.put(`http://localhost:5001/api/admin/user/${currentUser._id}`, currentUser);
       setIsEditModalOpen(false);
       fetchUsers();
     } catch (error) {
@@ -54,7 +54,7 @@ export default function UsersPage() {
   };
 
   const getRoleBadge = (role: string) => {
-    switch(role) {
+    switch (role) {
       case 'Creator': return 'bg-blue-100 text-blue-600';
       case 'Admin': return 'bg-purple-100 text-purple-600';
       default: return 'bg-slate-100 text-slate-600';
@@ -70,7 +70,7 @@ export default function UsersPage() {
 
   return (
     <div className="p-8 max-w-[1400px] mx-auto w-full bg-[#f8f9fa] min-h-[calc(100vh-64px)] font-sans relative">
-      
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
         <div>
@@ -89,21 +89,21 @@ export default function UsersPage() {
 
       {/* Main Container */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col relative z-0">
-        
+
         {/* Filters bar */}
         <div className="flex flex-col md:flex-row items-center justify-between p-4 border-b border-slate-100 gap-4">
-           <div className="flex items-center gap-6 w-full md:w-auto">
-             <button className="px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm flex items-center justify-between hover:bg-slate-50">
-                Bulk Actions <span className="text-[10px] text-slate-500 ml-2">▼</span>
-             </button>
-             <div className="flex gap-6 text-sm font-semibold text-slate-700">
-                <div className="cursor-pointer flex items-center gap-1">Role: <span className="font-normal text-slate-500">All Roles</span><span className="text-[10px]">▼</span></div>
-                <div className="cursor-pointer flex items-center gap-1">Status: <span className="font-normal text-slate-500">Any Status</span><span className="text-[10px]">▼</span></div>
-             </div>
-           </div>
-           <div className="text-sm font-semibold text-slate-500">
-             Showing <span className="text-slate-700">{users.length}</span> users
-           </div>
+          <div className="flex items-center gap-6 w-full md:w-auto">
+            <button className="px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm flex items-center justify-between hover:bg-slate-50">
+              Bulk Actions <span className="text-[10px] text-slate-500 ml-2">▼</span>
+            </button>
+            <div className="flex gap-6 text-sm font-semibold text-slate-700">
+              <div className="cursor-pointer flex items-center gap-1">Role: <span className="font-normal text-slate-500">All Roles</span><span className="text-[10px]">▼</span></div>
+              <div className="cursor-pointer flex items-center gap-1">Status: <span className="font-normal text-slate-500">Any Status</span><span className="text-[10px]">▼</span></div>
+            </div>
+          </div>
+          <div className="text-sm font-semibold text-slate-500">
+            Showing <span className="text-slate-700">{users.length}</span> users
+          </div>
         </div>
 
         {/* Table */}
@@ -147,12 +147,12 @@ export default function UsersPage() {
                   </td>
                   <td className="px-6 py-4 text-right pr-6">
                     <div className="flex justify-end gap-2 text-slate-600">
-                       <a href={`/admin/users/${user._id}`} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors border border-slate-200 shadow-sm relative group">
-                         <Eye className="w-4 h-4" />
-                       </a>
-                       <button onClick={() => deleteUser(user._id)} className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors border border-slate-200 shadow-sm relative group">
-                         <Trash2 className="w-4 h-4" />
-                       </button>
+                      <a href={`/admin/users/${user._id}`} className="p-1.5 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors border border-slate-200 shadow-sm relative group">
+                        <Eye className="w-4 h-4" />
+                      </a>
+                      <button onClick={() => deleteUser(user._id)} className="p-1.5 text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-md transition-colors border border-slate-200 shadow-sm relative group">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -162,7 +162,7 @@ export default function UsersPage() {
         </div>
 
         {/* Pagination md/sm */}
-         <div className="flex items-center justify-center p-6 mt-auto border-t border-slate-100">
+        <div className="flex items-center justify-center p-6 mt-auto border-t border-slate-100">
           <div className="flex items-center gap-3 text-sm font-semibold">
             <button className="p-1 text-slate-400 hover:text-slate-800"><ChevronLeft className="w-5 h-5" /></button>
             <button className="w-8 h-8 flex items-center justify-center rounded bg-slate-800 text-white shadow-sm">1</button>
@@ -177,84 +177,84 @@ export default function UsersPage() {
       {/* Edit User Modal Overlay */}
       {isEditModalOpen && currentUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-           <div className="bg-white rounded-2xl shadow-xl w-[480px] p-6 relative">
-              <button 
-                onClick={() => setIsEditModalOpen(false)}
-                className="absolute right-5 top-5 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="bg-white rounded-2xl shadow-xl w-[480px] p-6 relative">
+            <button
+              onClick={() => setIsEditModalOpen(false)}
+              className="absolute right-5 top-5 text-slate-400 hover:text-slate-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
 
-              <div className="flex gap-4 items-center mb-8">
-                <div className="relative">
-                  <img src={currentUser.avatar} alt="Avatar" className="w-14 h-14 rounded-full object-cover border border-slate-200" />
-                  <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-200">
-                     <Edit2 className="w-3 h-3 text-slate-600" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-slate-800">Edit User</h3>
-                  <p className="text-[11px] font-medium text-slate-500 mt-0.5">Modify account details for platform access</p>
+            <div className="flex gap-4 items-center mb-8">
+              <div className="relative">
+                <img src={currentUser.avatar} alt="Avatar" className="w-14 h-14 rounded-full object-cover border border-slate-200" />
+                <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 shadow-sm border border-slate-200">
+                  <Edit2 className="w-3 h-3 text-slate-600" />
                 </div>
               </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">Edit User</h3>
+                <p className="text-[11px] font-medium text-slate-500 mt-0.5">Modify account details for platform access</p>
+              </div>
+            </div>
 
-              <div className="space-y-4 text-sm font-semibold text-slate-800">
-                <div>
-                  <label className="block text-[11px] mb-1.5 ml-1">Full Name</label>
-                  <input type="text" value={currentUser.name} onChange={e => setCurrentUser({...currentUser, name: e.target.value})} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300" />
-                </div>
-                <div>
-                  <label className="block text-[11px] mb-1.5 ml-1">Email Address</label>
-                  <input type="email" value={currentUser.email} onChange={e => setCurrentUser({...currentUser, email: e.target.value})} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300" />
-                </div>
-                
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <label className="block text-[11px] mb-1.5 ml-1">Role</label>
-                    <div className="relative">
-                      <select value={currentUser.role} onChange={e => setCurrentUser({...currentUser, role: e.target.value})} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300 appearance-none">
-                        <option value="Creator">Creator</option>
-                        <option value="User">User</option>
-                        <option value="Premium User">Premium User</option>
-                        <option value="Admin">Admin</option>
-                        <option value="Moderator">Moderator</option>
-                      </select>
-                      <span className="absolute right-4 top-3.5 text-[10px] text-slate-500 pointer-events-none">▼</span>
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block text-[11px] mb-1.5 ml-1">Status</label>
-                    <div className="relative">
-                      <select value={currentUser.status} onChange={e => setCurrentUser({...currentUser, status: e.target.value})} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300 appearance-none">
-                        <option value="Active">Active</option>
-                        <option value="Suspended">Suspended</option>
-                        <option value="Pending">Pending</option>
-                      </select>
-                      <span className="absolute right-4 top-3.5 text-[10px] text-slate-500 pointer-events-none">▼</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="space-y-4 text-sm font-semibold text-slate-800">
+              <div>
+                <label className="block text-[11px] mb-1.5 ml-1">Full Name</label>
+                <input type="text" value={currentUser.name} onChange={e => setCurrentUser({ ...currentUser, name: e.target.value })} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300" />
+              </div>
+              <div>
+                <label className="block text-[11px] mb-1.5 ml-1">Email Address</label>
+                <input type="email" value={currentUser.email} onChange={e => setCurrentUser({ ...currentUser, email: e.target.value })} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300" />
+              </div>
 
-                <div className="pt-1">
-                  <label className="block text-[11px] mb-1.5 ml-1">Password</label>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[11px] mb-1.5 ml-1">Role</label>
                   <div className="relative">
-                    <input type="password" value={currentUser.password || '••••••••••••'} readOnly className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none tracking-widest text-slate-600" />
-                    <Copy className="absolute right-4 top-3 w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
+                    <select value={currentUser.role} onChange={e => setCurrentUser({ ...currentUser, role: e.target.value })} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300 appearance-none">
+                      <option value="Creator">Creator</option>
+                      <option value="User">User</option>
+                      <option value="Premium User">Premium User</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Moderator">Moderator</option>
+                    </select>
+                    <span className="absolute right-4 top-3.5 text-[10px] text-slate-500 pointer-events-none">▼</span>
                   </div>
-                  <p className="text-[9px] text-slate-400 mt-1 ml-1">Last changed 4 months ago</p>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[11px] mb-1.5 ml-1">Status</label>
+                  <div className="relative">
+                    <select value={currentUser.status} onChange={e => setCurrentUser({ ...currentUser, status: e.target.value })} className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none focus:ring-1 focus:ring-slate-300 appearance-none">
+                      <option value="Active">Active</option>
+                      <option value="Suspended">Suspended</option>
+                      <option value="Pending">Pending</option>
+                    </select>
+                    <span className="absolute right-4 top-3.5 text-[10px] text-slate-500 pointer-events-none">▼</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3">
-                 <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-sm font-bold transition-colors">
-                   Cancel
-                 </button>
-                 <button onClick={handleUpdateUser} className="px-5 py-2 bg-slate-800 text-white hover:bg-slate-700 rounded-lg text-sm font-bold transition-colors shadow-sm">
-                   Save Changes
-                 </button>
+              <div className="pt-1">
+                <label className="block text-[11px] mb-1.5 ml-1">Password</label>
+                <div className="relative">
+                  <input type="password" value={currentUser.password || '••••••••••••'} readOnly className="w-full bg-[#f8f9fa] border border-slate-200 rounded-lg px-4 py-2.5 outline-none tracking-widest text-slate-600" />
+                  <Copy className="absolute right-4 top-3 w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
+                </div>
+                <p className="text-[9px] text-slate-400 mt-1 ml-1">Last changed 4 months ago</p>
               </div>
+            </div>
 
-           </div>
+            <div className="mt-8 flex justify-end gap-3">
+              <button onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-sm font-bold transition-colors">
+                Cancel
+              </button>
+              <button onClick={handleUpdateUser} className="px-5 py-2 bg-slate-800 text-white hover:bg-slate-700 rounded-lg text-sm font-bold transition-colors shadow-sm">
+                Save Changes
+              </button>
+            </div>
+
+          </div>
         </div>
       )}
 

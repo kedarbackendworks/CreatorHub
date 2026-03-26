@@ -121,7 +121,7 @@ export default function WhyCreatorHub() {
         {/* ── Center Column: Skateboarder Image ── */}
         <div className="relative w-full lg:w-[500px] h-[500px] lg:h-[660px] flex items-center justify-center mx-auto lg:mx-0 -mt-4">
           <img
-            src="/image-008.png"
+            src="/assets/images/unsplash_A3radfdQtJo.png"
             alt="Creator with skateboard"
             className="relative z-10 h-full w-full object-cover object-top"
           />
@@ -132,7 +132,7 @@ export default function WhyCreatorHub() {
           {/* Small photo */}
           <div className="w-full h-[160px] rounded-2xl overflow-hidden">
             <img
-              src="/image-009.png"
+              src="/assets/images/Frame 2147243567.png"
               alt="Beach scene"
               className="w-full h-full object-cover"
             />

@@ -11,7 +11,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboard = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/admin/data');
+        const res = await axios.get('http://localhost:5001/api/admin/data');
         if (res.data && res.data.dashboard) setData(res.data.dashboard);
       } catch (err) {
         console.error("Error fetching dashboard:", err);
