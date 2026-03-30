@@ -14,11 +14,138 @@ interface Comment {
   };
   content: string;
   createdAt: string;
+  parentComment?: string | null;
 }
 
 interface CommentsSectionProps {
   postId: string;
 }
+
+const getRelativeTime = (dateString: string) => {
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const daysDifference = Math.round((new Date(dateString).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+  
+  if (Math.abs(daysDifference) < 1) {
+     const hoursDifference = Math.round((new Date(dateString).getTime() - new Date().getTime()) / (1000 * 60 * 60));
+     if(Math.abs(hoursDifference) < 1) {
+         const mins = Math.round((new Date(dateString).getTime() - new Date().getTime()) / (1000 * 60));
+         return rtf.format(mins, 'minute');
+     }
+     return rtf.format(hoursDifference, 'hour');
+  }
+  return rtf.format(daysDifference, 'day');
+};
+
+const NestedComment = ({ 
+  comment, 
+  allComments, 
+  postId, 
+  onCommentAdded 
+}: { 
+  comment: Comment, 
+  allComments: Comment[], 
+  postId: string, 
+  onCommentAdded: (c: Comment) => void 
+}) => {
+  const { token } = useAuthStore();
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+
+  const childComments = allComments.filter(c => c.parentComment === comment._id);
+
+  const handleReplySubmit = async () => {
+    if (!token) {
+      toast.error('Login to reply');
+      return;
+    }
+    if (!replyText.trim()) return;
+
+    setSubmittingReply(true);
+    try {
+      const res = await api.post(`/user/posts/${postId}/comments`, { 
+        content: replyText,
+        parentCommentId: comment._id
+      });
+      onCommentAdded(res.data);
+      setReplyText('');
+      setShowReplyInput(false);
+      toast.success('Reply added!');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to post reply');
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-[4px] items-start w-full relative mt-[16px]">
+      <div className="flex gap-[16px] items-start w-full">
+        <div className="w-[40px] h-[40px] rounded-full bg-[#ebebeb] overflow-hidden shrink-0 flex items-center justify-center text-[#5a5a5a] font-bold">
+          {comment.user.avatar ? (
+            <img src={comment.user.avatar} alt={comment.user.name} className="w-full h-full object-cover" />
+          ) : (
+            comment.user.name.charAt(0).toUpperCase()
+          )}
+        </div>
+        <div className="flex flex-col w-full flex-1">
+          <div className="flex items-baseline gap-[12px]">
+            <span className="font-semibold text-[#1a1a1a] text-[15px]">{comment.user.name}</span>
+            <span className="text-[#9a9a9a] text-[12px]">
+              {getRelativeTime(comment.createdAt)}
+            </span>
+          </div>
+          <p className="text-[#5a5a5a] text-[15px] leading-relaxed whitespace-pre-wrap mt-[4px]">
+            {comment.content}
+          </p>
+          
+          <div className="flex gap-[15px] items-start mt-[8px]">
+            <div 
+              onClick={() => setShowReplyInput(!showReplyInput)}
+              className="flex items-center justify-center cursor-pointer hover:underline text-[#9a9a9a] text-[13px] font-medium"
+            >
+              Reply
+            </div>
+          </div>
+
+          {showReplyInput && (
+            <div className="flex flex-col gap-3 mt-[8px] w-full max-w-[600px]">
+              <textarea
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder={`Reply to ${comment.user.name}...`}
+                className="w-full min-h-[60px] p-3 rounded-[12px] border border-[#d8d1c7] resize-none focus:outline-none focus:ring-1 focus:ring-[#f95c4b] bg-white text-[14px]"
+              />
+              <div className="flex justify-end">
+                <button 
+                  onClick={handleReplySubmit}
+                  disabled={submittingReply || !replyText.trim()}
+                  className="bg-[#f95c4b] hover:bg-[#e04a39] text-white px-4 py-1.5 rounded-full text-[13px] font-medium transition-colors disabled:opacity-50"
+                >
+                  {submittingReply ? 'Posting...' : 'Reply'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {childComments.length > 0 && (
+            <div className="flex flex-col w-full border-l-2 border-[#e4ded2] pl-[16px] ml-[8px] mt-[4px]">
+              {childComments.map(child => (
+                <NestedComment 
+                  key={child._id} 
+                  comment={child} 
+                  allComments={allComments} 
+                  postId={postId} 
+                  onCommentAdded={onCommentAdded} 
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function CommentsSection({ postId }: CommentsSectionProps) {
   const { token } = useAuthStore();
@@ -86,28 +213,15 @@ export default function CommentsSection({ postId }: CommentsSectionProps) {
         </div>
       </form>
 
-      <div className="flex flex-col gap-[20px] mt-4">
-        {comments.map((comment) => (
-          <div key={comment._id} className="flex gap-[16px] items-start">
-            <div className="w-[40px] h-[40px] rounded-full bg-[#ebebeb] overflow-hidden shrink-0 flex items-center justify-center text-[#5a5a5a] font-bold">
-              {comment.user.avatar ? (
-                <img src={comment.user.avatar} alt={comment.user.name} className="w-full h-full object-cover" />
-              ) : (
-                comment.user.name.charAt(0).toUpperCase()
-              )}
-            </div>
-            <div className="flex flex-col gap-[4px] w-full">
-              <div className="flex items-baseline gap-[12px]">
-                <span className="font-semibold text-[#1a1a1a] text-[15px]">{comment.user.name}</span>
-                <span className="text-[#9a9a9a] text-[12px]">
-                  {new Date(comment.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              <p className="text-[#5a5a5a] text-[15px] leading-relaxed whitespace-pre-wrap">
-                {comment.content}
-              </p>
-            </div>
-          </div>
+      <div className="flex flex-col mt-4">
+        {comments.filter(c => !c.parentComment).map((comment) => (
+          <NestedComment
+            key={comment._id}
+            comment={comment}
+            allComments={comments}
+            postId={postId}
+            onCommentAdded={(newComment) => setComments([...comments, newComment])}
+          />
         ))}
         {comments.length === 0 && (
           <p className="text-center text-[#9a9a9a] py-8 border-t border-[#d8d1c7] mt-4">No comments yet. Be the first to add one!</p>

@@ -12,7 +12,11 @@ const {
   getLiveStreams,
   reactToPost,
   getComments,
-  addComment
+  addComment,
+  getCreatorReviews,
+  addCreatorReview,
+  getReviewReplies,
+  addReviewReply
 } = require('../controllers/userController');
 
 const {
@@ -25,6 +29,7 @@ router.get('/creators', getCreators);
 router.get('/creators/search', searchCreators);
 router.get('/creators/:id', getCreatorProfile);
 router.get('/creators/:id/posts', getCreatorPosts);
+router.get('/creators/:id/reviews', getCreatorReviews);
 router.get('/livestreams', getLiveStreams);
 
 // Protected routes (for Fans/Users)
@@ -39,5 +44,11 @@ router.get('/posts/:id', getPostDetails);
 router.post('/posts/:id/react', reactToPost);
 router.get('/posts/:id/comments', getComments);
 router.post('/posts/:id/comments', addComment);
+
+router.post('/creators/:id/reviews', addCreatorReview);
+
+// Review replies
+router.get('/reviews/:id/replies', getReviewReplies);
+router.post('/reviews/:id/replies', addReviewReply);
 
 module.exports = router;

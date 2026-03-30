@@ -1,4 +1,4 @@
-export default function CreatorAbout() {
+export default function CreatorAbout({ creatorId }: { creatorId?: string }) {
   return (
     <div className="flex flex-col gap-[8px] items-start w-full max-w-[1116px]">
       

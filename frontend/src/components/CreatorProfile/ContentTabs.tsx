@@ -2,23 +2,20 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
-type Tab = {
-  id: string;
-  label: string;
-  icon: string;
-  href: string;
-};
+export default function ContentTabs({ defaultTab = 'posts', creatorId: propCreatorId }: { defaultTab?: string, creatorId?: string }) {
+  const params = useParams();
+  const creatorId = propCreatorId || params?.id || 'default'; // fallback if not in dynamic route
 
-const TABS: Tab[] = [
-  { id: 'posts', label: 'Posts', icon: '/assets/creator/gallery.svg', href: '/user/creator' },
-  { id: 'videos', label: 'Videos', icon: '/assets/creator/video-circle.svg', href: '/user/creator' },
-  { id: 'livestreams', label: 'Livestreams', icon: '/assets/creator/video.svg', href: '/livestream/123' },
-  { id: 'reviews', label: 'Reviews', icon: '/assets/creator/message.svg', href: '/user/creator/reviews' },
-  { id: 'about', label: 'About', icon: '/assets/creator/info-circle.svg', href: '/user/creator/about' },
-];
+  const TABS = [
+    { id: 'posts', label: 'Posts', icon: '/assets/creator/gallery.svg', href: `/user/creators/${creatorId}` },
+    { id: 'videos', label: 'Videos', icon: '/assets/creator/video-circle.svg', href: `/user/creators/${creatorId}` },
+    { id: 'livestreams', label: 'Livestreams', icon: '/assets/creator/video.svg', href: `/livestream/${creatorId}` },
+    { id: 'reviews', label: 'Reviews', icon: '/assets/creator/message.svg', href: `/user/creators/${creatorId}/reviews` },
+    { id: 'about', label: 'About', icon: '/assets/creator/info-circle.svg', href: `/user/creators/${creatorId}/about` },
+  ];
 
-export default function ContentTabs({ defaultTab = 'posts' }: { defaultTab?: string }) {
   return (
     <div className="flex gap-[12px] items-center border-b border-[#e4ded2] w-full shrink-0">
       {TABS.map((tab) => {

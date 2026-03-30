@@ -3,6 +3,8 @@ const Creator = require('../models/Creator');
 const Post = require('../models/Post');
 const Reaction = require('../models/Reaction');
 const Comment = require('../models/Comment');
+const Review = require('../models/Review');
+const ReviewReply = require('../models/ReviewReply');
 const jwt = require('jsonwebtoken');
 
 // @desc    Get all creators for discovery
@@ -209,8 +211,8 @@ exports.reactToPost = async (req, res) => {
 exports.getComments = async (req, res) => {
   try {
     const comments = await Comment.find({ post: req.params.id })
-      .populate('user', 'name')
-      .sort({ createdAt: -1 });
+      .populate('user', 'name avatar')
+      .sort({ createdAt: 1 });
     res.json(comments);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -221,7 +223,7 @@ exports.getComments = async (req, res) => {
 // @route   POST /api/user/posts/:id/comments
 exports.addComment = async (req, res) => {
   try {
-    const { content } = req.body;
+    const { content, parentCommentId } = req.body;
     if (!content || !content.trim()) {
       return res.status(400).json({ message: 'Comment content is required' });
     }
@@ -232,14 +234,119 @@ exports.addComment = async (req, res) => {
     const newComment = await Comment.create({
       user: req.user._id,
       post: post._id,
+      parentComment: parentCommentId || null,
       content: content.trim()
     });
 
     post.comments = (post.comments || 0) + 1;
     await post.save();
 
-    const populatedComment = await Comment.findById(newComment._id).populate('user', 'name');
+    const populatedComment = await Comment.findById(newComment._id).populate('user', 'name avatar');
     res.status(201).json(populatedComment);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// @desc    Get reviews for a creator
+// @route   GET /api/user/creators/:id/reviews
+exports.getCreatorReviews = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalCount = await Review.countDocuments({ creator: req.params.id });
+    
+    const reviews = await Review.find({ creator: req.params.id })
+      .populate('user', 'name avatar') // user might not have avatar in schema but we try
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      reviews,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit)
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// @desc    Add a review to a creator
+// @route   POST /api/user/creators/:id/reviews
+exports.addCreatorReview = async (req, res) => {
+  try {
+    const { content, rating } = req.body;
+    
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Review content is required' });
+    }
+
+    const creatorId = req.params.id;
+
+    // Check for existing review
+    const existingReview = await Review.findOne({ user: req.user._id, creator: creatorId });
+    if (existingReview) {
+      return res.status(400).json({ message: 'You have already reviewed this creator' });
+    }
+
+    const newReview = await Review.create({
+      user: req.user._id,
+      creator: creatorId,
+      content: content.trim(),
+      rating
+    });
+
+    const populatedReview = await Review.findById(newReview._id).populate('user', 'name avatar');
+    res.status(201).json(populatedReview);
+
+  } catch (err) {
+    // Handle mongoose unique index error separately if it slips through
+    if (err.code === 11000) {
+        return res.status(400).json({ message: 'You have already reviewed this creator' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// @desc    Get replies for a review
+// @route   GET /api/user/reviews/:id/replies
+exports.getReviewReplies = async (req, res) => {
+  try {
+    const replies = await ReviewReply.find({ review: req.params.id })
+      .populate('user', 'name avatar')
+      .sort({ createdAt: 1 });
+    res.json(replies);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// @desc    Add a reply to a review
+// @route   POST /api/user/reviews/:id/replies
+exports.addReviewReply = async (req, res) => {
+  try {
+    const { content, parentReplyId } = req.body;
+    
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Reply content is required' });
+    }
+
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: 'Review not found' });
+
+    const newReply = await ReviewReply.create({
+      user: req.user._id,
+      review: review._id,
+      parentReply: parentReplyId || null,
+      content: content.trim()
+    });
+
+    const populatedReply = await ReviewReply.findById(newReply._id).populate('user', 'name avatar');
+    res.status(201).json(populatedReply);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -9,10 +9,10 @@ import ProfileHeader from '@/src/components/CreatorProfile/ProfileHeader';
 import ProfileActions from '@/src/components/CreatorProfile/ProfileActions';
 import ConnectedLinks from '@/src/components/CreatorProfile/ConnectedLinks';
 import ContentTabs from '@/src/components/CreatorProfile/ContentTabs';
-import ProfileContentFeed from '@/src/components/CreatorProfile/ProfileContentFeed';
+import CreatorAbout from '@/src/components/CreatorProfile/CreatorAbout';
 import api from '@/src/lib/api';
 
-export default function CreatorProfilePage({ params }: { params: Promise<{ id: string }> }) {
+export default function CreatorAboutPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [creator, setCreator] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
           <div className="absolute left-[42px] top-[-72px] rounded-[68px] w-[140px] h-[140px] border-4 border-[#f6f4f1] shadow-sm z-10 shrink-0 bg-white overflow-hidden">
             <Image 
               src={creator.avatar || "/assets/creator/avatar.png"} 
-              alt={creator.name} 
+              alt={creator.name || "Avatar"} 
               fill 
               className="object-cover" 
             />
@@ -63,8 +63,8 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="flex flex-col gap-[24px] items-start w-full mt-[24px]">
-                <ContentTabs creatorId={id as string} />
-                <ProfileContentFeed creatorId={creator._id} />
+                <ContentTabs defaultTab="about" creatorId={id as string} />
+                <CreatorAbout creatorId={creator._id} />
               </div>
             </div>
           </div>
