@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { MoreVertical, Search, Filter, Globe, Lock, Clock, FileText, Image as ImageIcon, Video, Radio, Trash2, Edit3, Eye, X, Check } from 'lucide-react';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function ContentLibraryPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('Published');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [posts, setPosts] = useState<any[]>([]);
@@ -62,7 +64,7 @@ export default function ContentLibraryPage() {
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type.toLowerCase()) {
+    switch (type?.toLowerCase() || '') {
       case 'image': return <ImageIcon className="w-4 h-4 text-slate-400" />;
       case 'video': return <Video className="w-4 h-4 text-slate-400" />;
       case 'livestream': return <Radio className="w-4 h-4 text-slate-400" />;
@@ -118,7 +120,7 @@ export default function ContentLibraryPage() {
                 <tr key={item._id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-5">
-                      <img src={item.mediaUrl || 'https://via.placeholder.com/100'} alt="Post" className="w-14 h-12 object-cover rounded-xl border border-slate-200 shadow-sm" />
+                      <img src={item.thumbnailUrl || item.mediaUrl || 'https://via.placeholder.com/100'} alt="Post" className="w-14 h-12 object-cover rounded-xl border border-slate-200 shadow-sm" />
                       <span className="text-[15px] font-bold text-[#1c1917] group-hover:text-rose-500 transition-colors leading-tight">{item.title}</span>
                     </div>
                   </td>
@@ -142,7 +144,10 @@ export default function ContentLibraryPage() {
                     </button>
                     {activeMenu === item._id && (
                        <div className="absolute right-0 top-10 w-48 bg-white border border-slate-200 rounded-2xl shadow-2xl py-2 z-[100] animate-in fade-in zoom-in duration-200 origin-top-right">
-                          <button className="w-full px-6 py-3 text-left text-sm font-bold text-[#1c1917] hover:bg-slate-50 flex items-center gap-3 transition-colors">
+                          <button 
+                            onClick={() => router.push(`/creator/post/${item._id}`)}
+                            className="w-full px-6 py-3 text-left text-sm font-bold text-[#1c1917] hover:bg-slate-50 flex items-center gap-3 transition-colors"
+                          >
                               View post
                           </button>
                           <button 

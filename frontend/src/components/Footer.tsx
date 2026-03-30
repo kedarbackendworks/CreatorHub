@@ -3,12 +3,6 @@
 import { usePathname } from 'next/navigation';
 import { MapPin, Mail, Phone } from "lucide-react";
 
-// Other imports remain unchanged
-const imgSkillIconsInstagram = "http://localhost:3845/assets/2b6a9ed067c444fe86379649a2be85e74afef14b.svg";
-const imgLogosTwitter = "http://localhost:3845/assets/74ba57afdcd660cdb8118f5713159f22097ae08e.svg";
-const imgLogosLinkedinIcon = "http://localhost:3845/assets/8a9c903accf577faa3ba62b268f85eaf0b73b103.svg";
-const imgLogosFacebook = "http://localhost:3845/assets/370fa8f46ceb9c3f6f826688aac8c4a4532593ad.svg";
-
 export default function Footer() {
   const pathname = usePathname();
 
@@ -43,17 +37,17 @@ export default function Footer() {
               who inspire you every day.
             </p>
             <div className="flex gap-4 items-center mt-2 text-[#4b5563]">
-              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[16px] h-[16px]">
-                <img src={imgSkillIconsInstagram} alt="Instagram" className="w-[16px] h-[16px]" />
+              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[20px] h-[20px]">
+                <img src="/assets/icons/Instagram.svg" alt="Instagram" className="w-full h-full" />
               </a>
-              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[16px] h-[16px]">
-                <img src={imgLogosTwitter} alt="Twitter" className="w-[16px] h-[16px]" />
+              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[20px] h-[20px]">
+                <img src="/assets/icons/Twitter.svg" alt="Twitter" className="w-full h-full" />
               </a>
-              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[16px] h-[16px]">
-                <img src={imgLogosLinkedinIcon} alt="LinkedIn" className="w-[16px] h-[16px]" />
+              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[20px] h-[20px]">
+                <img src="/assets/icons/linkedin.svg" alt="LinkedIn" className="w-full h-full" />
               </a>
-              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[16px] h-[16px]">
-                <img src={imgLogosFacebook} alt="Facebook" className="w-[16px] h-[16px]" />
+              <a href="#" className="hover:opacity-75 transition-opacity opacity-100 flex items-center justify-center w-[20px] h-[20px]">
+                <img src="/assets/icons/Facebook.svg" alt="Facebook" className="w-full h-full" />
               </a>
             </div>
           </div>

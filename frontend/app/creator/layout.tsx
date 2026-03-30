@@ -9,8 +9,10 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [createOpen, setCreateOpen] = useState(true);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const isActive = (path: string) => {
     return pathname === path 
@@ -74,15 +76,35 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
           </div>
         </nav>
 
-        <div className="px-6 mt-auto">
-          <div className="flex justify-between items-center pt-6 border-t border-slate-200/80 cursor-pointer group">
+        <div className="px-6 mt-auto relative">
+          {profileMenuOpen && (
+            <div className="absolute bottom-20 left-6 right-6 bg-white border border-slate-200 rounded-2xl shadow-2xl py-3 z-[100] animate-in fade-in slide-in-from-bottom-4">
+              <Link 
+                href="/creator/profile" 
+                className="w-full flex items-center gap-3 px-6 py-3 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                onClick={() => setProfileMenuOpen(false)}
+              >
+                View Profile
+              </Link>
+              <button 
+                onClick={logout}
+                className="w-full flex items-center gap-3 px-6 py-3 text-sm font-bold text-rose-500 hover:bg-rose-50 transition-colors"
+              >
+                Log out
+              </button>
+            </div>
+          )}
+          <div 
+            onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+            className="flex justify-between items-center pt-6 border-t border-slate-200/80 cursor-pointer group"
+          >
              <div className="flex items-center gap-3">
-               <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold shadow-sm">
+               <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center text-white text-xs font-bold shadow-sm overflow-hidden">
                  {user?.name?.charAt(0) || 'U'}
                </div>
                <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 line-clamp-1">{user?.name || 'Profile'}</span>
              </div>
-             <MoreVertical className="w-4 h-4 text-slate-400 group-hover:text-slate-600" />
+             <MoreVertical className={`w-4 h-4 text-slate-400 group-hover:text-slate-600 transition-transform ${profileMenuOpen ? 'rotate-90' : ''}`} />
           </div>
         </div>
       </aside>

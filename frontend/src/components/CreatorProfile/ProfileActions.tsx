@@ -7,9 +7,10 @@ import toast from 'react-hot-toast';
 
 interface ProfileActionsProps {
   creatorId: string;
+  creatorUserId?: string;
 }
 
-export default function ProfileActions({ creatorId }: ProfileActionsProps) {
+export default function ProfileActions({ creatorId, creatorUserId }: ProfileActionsProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -18,8 +19,8 @@ export default function ProfileActions({ creatorId }: ProfileActionsProps) {
     if (!messageText.trim()) return;
     setIsSending(true);
     try {
-      await api.post('/messages', {
-        recipientId: creatorId,
+      await api.post('/user/messages', {
+        recipientId: creatorUserId,
         text: messageText
       });
       toast.success('Message sent!');

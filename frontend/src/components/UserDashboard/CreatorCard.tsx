@@ -5,6 +5,7 @@ import Link from 'next/link';
 interface Post {
   _id: string;
   mediaUrl: string;
+  thumbnailUrl?: string;
   mediaType: string;
   title: string;
 }
@@ -69,7 +70,7 @@ export default function CreatorCard({ creator }: CreatorCardProps) {
           {creator.posts && creator.posts.length > 0 ? (
             creator.posts.map((post, i) => (
               <div key={post._id} className="relative h-[140px] w-[200px] shrink-0 rounded-[8px] overflow-hidden bg-white shadow-sm hover:opacity-90 transition-opacity cursor-pointer">
-                <Image src={post.mediaUrl} alt={post.title} fill className="object-cover" sizes="200px" />
+                <Image src={post.thumbnailUrl || post.mediaUrl} alt={post.title} fill className="object-cover" sizes="200px" />
               </div>
             ))
           ) : (

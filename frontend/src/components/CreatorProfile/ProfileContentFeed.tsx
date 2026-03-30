@@ -37,7 +37,7 @@ export default function ProfileContentFeed({ creatorId }: ProfileContentFeedProp
             <div aria-hidden="true" className="absolute inset-0 pointer-events-none rounded-[12px]">
               <div className="absolute bg-[#ebebeb] inset-0 rounded-[12px]" />
               <Image 
-                src={post.mediaUrl || '/assets/creator/thumbnail.png'} 
+                src={post.thumbnailUrl || post.mediaUrl || '/assets/creator/thumbnail.png'} 
                 alt={post.title} 
                 fill 
                 className="object-cover" 

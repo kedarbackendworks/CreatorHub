@@ -5,6 +5,7 @@ const {
   getDashboardData,
   createPost,
   getPosts,
+  getPostById,
   updatePost,
   deletePost,
   updateSocialLinks,
@@ -51,6 +52,7 @@ router.post('/messages', sendMessage);
 // Post routing
 router.post('/posts', createPost);
 router.get('/posts', getPosts);
+router.get('/posts/:id', getPostById);
 router.put('/posts/:id', updatePost);
 router.delete('/posts/:id', deletePost);
 

@@ -49,7 +49,11 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
             creatorId={post.creatorId?._id || post.creatorId} 
           />
           
-          <PostHeroImage mediaUrl={post.mediaUrl} />
+          <PostHeroImage 
+            mediaUrl={post.mediaUrl} 
+            mediaType={post.mediaType} 
+            thumbnailUrl={post.thumbnailUrl} 
+          />
           
           <PostMetadata 
             creatorName={post.creatorId?.name || "Creator"}

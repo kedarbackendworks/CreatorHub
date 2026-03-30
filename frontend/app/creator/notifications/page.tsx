@@ -4,8 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { MoreHorizontal, Bell } from 'lucide-react';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,10 +25,15 @@ export default function NotificationsPage() {
     fetchNotifications();
   }, []);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = async (notification: any) => {
     try {
-      await api.put(`/creator/notifications/${id}/read`);
-      setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
+      if (!notification.isRead) {
+        await api.put(`/creator/notifications/${notification._id}/read`);
+        setNotifications(notifications.map(n => n._id === notification._id ? { ...n, isRead: true } : n));
+      }
+      if (notification.relatedId) {
+        router.push(`/creator/post/${notification.relatedId}`);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -54,7 +61,7 @@ export default function NotificationsPage() {
                 {todayNotifications.map((n, idx) => (
                   <div 
                     key={n._id} 
-                    onClick={() => markAsRead(n._id)}
+                    onClick={() => markAsRead(n)}
                     className="bg-white border border-slate-200/60 rounded-2xl p-6 flex justify-between items-center hover:shadow-sm transition-shadow group cursor-pointer"
                   >
                       <div className="flex items-start gap-4">
@@ -82,7 +89,7 @@ export default function NotificationsPage() {
                  {earlierNotifications.map((n) => (
                   <div 
                     key={n._id} 
-                    onClick={() => markAsRead(n._id)}
+                    onClick={() => markAsRead(n)}
                     className="bg-white border border-slate-200/60 rounded-2xl p-6 flex justify-between items-center hover:shadow-sm transition-shadow group cursor-pointer opacity-80 hover:opacity-100"
                   >
                       <div className="flex items-start gap-4">

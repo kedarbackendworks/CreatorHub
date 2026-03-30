@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const multer = require('multer');
 const streamifier = require('streamifier');
 const cloudinary = require('../utils/cloudinary');
@@ -12,7 +13,6 @@ const getDashboardData = async (req, res) => {
   try {
     let creator = await Creator.findOne({ userId: req.user._id.toString() });
     if (!creator) {
-      // Create if they are a creator but profile is missing
       creator = await Creator.create({ 
           userId: req.user._id.toString(), 
           name: req.user.name, 
@@ -22,24 +22,31 @@ const getDashboardData = async (req, res) => {
 
     const posts = await Post.find({ creatorId: creator._id });
     const activeSubscribers = creator.subscribers ? creator.subscribers.length : 0;
-    const totalEarned = creator.earnings.total;
+    
+    // Sum real earnings from posts
+    const calculatedTotalEarned = posts.reduce((sum, p) => sum + (p.revenue?.total || 0), 0);
+    const totalEarned = Math.max(creator.earnings.total, calculatedTotalEarned);
     const thisMonth = creator.earnings.thisMonth;
 
-    // Per-post revenue table (mocked or aggregated)
+    // Per-post performance/revenue table
     const postRevenueBreakdown = posts.map(p => ({
       id: p._id,
       title: p.title,
       type: p.mediaType,
       date: p.createdAt,
-      revenueSubscription: p.revenue.subscription || 0,
-      revenueExclusive: p.revenue.exclusive || 0,
-      total: (p.revenue.subscription || 0) + (p.revenue.exclusive || 0)
-    })).sort((a,b) => b.date - a.date).slice(0, 5);
+      revenueSubscription: p.revenue?.breakdown?.subscriptionPay || 0,
+      revenueExclusive: p.revenue?.breakdown?.directPurchase || 0,
+      total: p.revenue?.total || 0,
+      views: p.views || 0,
+      likes: p.likes || 0,
+      comments: p.comments || 0,
+      thumbnailUrl: p.thumbnailUrl || (p.mediaType === 'image' ? p.mediaUrl : ''),
+      mediaUrl: p.mediaUrl
+    })).sort((a,b) => b.date - a.date).slice(0, 10);
 
-    // Month breakdown (stub data)
+    // Month breakdown (real-ish, normally you'd use aggregation)
     const revenueHistory = [
-      { name: 'Last Month', subscription: 3500, exclusive: 1200 },
-      { name: 'This Month', subscription: 3000, exclusive: 1800 },
+      { name: 'Total', subscription: posts.reduce((sum, p) => sum + (p.revenue?.breakdown?.subscriptionPay || 0), 0), exclusive: posts.reduce((sum, p) => sum + (p.revenue?.breakdown?.directPurchase || 0), 0) },
     ];
 
     res.json({
@@ -59,22 +66,50 @@ const getDashboardData = async (req, res) => {
 };
 
 const updateCreatorProfile = async (req, res) => {
-  try {
-    let creator = await Creator.findOne({ userId: req.user._id.toString() });
-    if (!creator) return res.status(404).json({ error: 'Creator not found' });
+  upload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
 
-    const { name, username, bio, avatar } = req.body;
+    try {
+      let creator = await Creator.findOne({ userId: req.user._id.toString() });
+      if (!creator) return res.status(404).json({ error: 'Creator not found' });
 
-    if (name) creator.name = name;
-    if (username) creator.username = username.toLowerCase().replace(' ', '');
-    if (bio !== undefined) creator.bio = bio;
-    if (avatar) creator.avatar = avatar;
+      const { name, username, bio } = req.body;
 
-    await creator.save();
-    res.json(creator);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+      if (name) creator.name = name;
+      if (username) creator.username = username.toLowerCase().replace(' ', '');
+      if (bio !== undefined) creator.bio = bio;
+
+      if (req.file) {
+        const streamUpload = (req) => {
+          return new Promise((resolve, reject) => {
+            let stream = cloudinary.uploader.upload_stream(
+              { resource_type: 'auto', folder: 'logoipsum_avatars' },
+              (error, result) => {
+                if (result) resolve(result);
+                else reject(error);
+              }
+            );
+            streamifier.createReadStream(req.file.buffer).pipe(stream);
+          });
+        };
+        const result = await streamUpload(req);
+        creator.avatar = result.secure_url;
+      } else if (req.body.avatar) {
+        creator.avatar = req.body.avatar;
+      }
+
+      await creator.save();
+      
+      // Also update name in User model if changed
+      if (name) {
+        await User.findByIdAndUpdate(req.user._id, { name });
+      }
+
+      res.json(creator);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 };
 
 // --- Engagement Analytics ---
@@ -102,7 +137,10 @@ const getAnalytics = async (req, res) => {
 };
 
 // --- Posts ---
-const upload = multer({ storage: multer.memoryStorage() }).single('file');
+const upload = multer({ storage: multer.memoryStorage() }).fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'thumbnail', maxCount: 1 }
+]);
 
 const createPost = async (req, res) => {
   upload(req, res, async (err) => {
@@ -117,32 +155,50 @@ const createPost = async (req, res) => {
       });
 
       let mediaUrl = '';
-      if (req.file) {
-        const streamUpload = (req) => {
-          return new Promise((resolve, reject) => {
-            let stream = cloudinary.uploader.upload_stream(
-              { resource_type: 'auto', folder: 'logoipsum_creator' },
-              (error, result) => {
-                if (result) resolve(result);
-                else reject(error);
-              }
-            );
-            streamifier.createReadStream(req.file.buffer).pipe(stream);
-          });
-        };
-        const result = await streamUpload(req);
+      let thumbnailUrl = '';
+
+      const processUpload = async (file, folder) => {
+        return new Promise((resolve, reject) => {
+          let stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto', folder },
+            (error, result) => {
+              if (result) resolve(result);
+              else reject(error);
+            }
+          );
+          streamifier.createReadStream(file.buffer).pipe(stream);
+        });
+      };
+
+      if (req.files && req.files.file) {
+        const result = await processUpload(req.files.file[0], 'logoipsum_creator');
         mediaUrl = result.secure_url;
       } else if (req.body.mediaUrl) {
         mediaUrl = req.body.mediaUrl;
       }
 
+      if (req.files && req.files.thumbnail) {
+        const result = await processUpload(req.files.thumbnail[0], 'logoipsum_thumbnails');
+        thumbnailUrl = result.secure_url;
+      } else if (req.body.thumbnailUrl) {
+        thumbnailUrl = req.body.thumbnailUrl;
+      }
+
       const { title, description, mediaType, isExclusive, status, category, price } = req.body;
+      
+      const realMediaType = mediaType || (req.files?.file?.[0]?.mimetype?.startsWith('video/') ? 'video' : 'image');
+
+      // If video and no thumbnail provided, generate one from cloudinary url
+      if (realMediaType === 'video' && !thumbnailUrl && mediaUrl.includes('cloudinary')) {
+        thumbnailUrl = mediaUrl.replace(/\.[^/.]+$/, ".jpg");
+      }
 
       const newPost = await Post.create({
         title: title || 'Untitled Post',
         description: description || '',
-        mediaType: mediaType || 'image',
+        mediaType: realMediaType,
         mediaUrl: mediaUrl || 'https://via.placeholder.com/600',
+        thumbnailUrl: thumbnailUrl || (realMediaType === 'image' ? mediaUrl : 'https://via.placeholder.com/600'),
         isExclusive: isExclusive === 'true' || isExclusive === true,
         status: status || 'published',
         category: category || 'content',
@@ -161,22 +217,91 @@ const createPost = async (req, res) => {
 };
 
 const updatePost = async (req, res) => {
+  upload(req, res, async (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    
     try {
         const { id } = req.params;
         let post = await Post.findById(id);
         if (!post) return res.status(404).json({ message: 'Post not found' });
         
-        // Ensure owner
         const creator = await Creator.findOne({ userId: req.user._id.toString() });
         if (!creator || post.creatorId.toString() !== creator._id.toString()) {
             return res.status(403).json({ message: 'Not authorized to edit this post' });
         }
 
-        const updatedPost = await Post.findByIdAndUpdate(id, req.body, { new: true });
+        const updateData = { ...req.body };
+        
+        // Sanitize data
+        if (updateData.isExclusive !== undefined) {
+          updateData.isExclusive = updateData.isExclusive === 'true' || updateData.isExclusive === true;
+        }
+        if (updateData.price !== undefined) {
+          updateData.price = parseFloat(updateData.price || 0);
+        }
+
+        const processUpload = async (file, folder) => {
+            return new Promise((resolve, reject) => {
+                let stream = cloudinary.uploader.upload_stream(
+                    { resource_type: 'auto', folder },
+                    (error, result) => {
+                        if (result) resolve(result);
+                        else reject(error);
+                    }
+                );
+                streamifier.createReadStream(file.buffer).pipe(stream);
+            });
+        };
+
+        if (req.files && req.files.file) {
+            const result = await processUpload(req.files.file[0], 'logoipsum_creator');
+            updateData.mediaUrl = result.secure_url;
+            if (req.files.file[0].mimetype.startsWith('video/')) updateData.mediaType = 'video';
+            else if (req.files.file[0].mimetype.startsWith('image/')) updateData.mediaType = 'image';
+        }
+
+        if (req.files && req.files.thumbnail) {
+            const result = await processUpload(req.files.thumbnail[0], 'logoipsum_thumbnails');
+            updateData.thumbnailUrl = result.secure_url;
+        }
+
+        // Auto-generate thumbnail for video if not provided/changed
+        const currentMediaType = updateData.mediaType || post.mediaType;
+        const currentMediaUrl = updateData.mediaUrl || post.mediaUrl;
+        const currentThumbnailUrl = updateData.thumbnailUrl || post.thumbnailUrl;
+
+        if (currentMediaType === 'video' && !currentThumbnailUrl && currentMediaUrl?.includes('cloudinary')) {
+            updateData.thumbnailUrl = currentMediaUrl.replace(/\.[^/.]+$/, ".jpg");
+        }
+
+        const updatedPost = await Post.findByIdAndUpdate(id, updateData, { new: true });
         res.json(updatedPost);
     } catch (err) {
+        console.error("Update post error:", err);
         res.status(500).json({ error: err.message });
     }
+  });
+};
+
+const getPostById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: 'Invalid Post ID' });
+    }
+    const post = await Post.findById(id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+    
+    // Ensure the post belongs to the authenticated creator
+    const creator = await Creator.findOne({ userId: req.user._id.toString() });
+    if (!creator || post.creatorId.toString() !== creator._id.toString()) {
+      return res.status(403).json({ message: 'Not authorized to view this post' });
+    }
+    
+    res.json(post);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const getPosts = async (req, res) => {
@@ -261,46 +386,54 @@ const getSubscribers = async (req, res) => {
 const getInsightsData = async (req, res) => {
   try {
     let creator = await Creator.findOne({ userId: req.user._id.toString() });
-    if (!creator) creator = await Creator.create({ 
-        userId: req.user._id.toString(), 
-        name: req.user.name, 
-        username: req.user.name.toLowerCase().replace(' ', '') 
-    });
+    if (!creator) return res.status(404).json({ error: 'Creator not found' });
 
-    // Mock Audience Stats
+    const posts = await Post.find({ creatorId: creator._id });
+    
+    // Aggregating real data
+    const totalLikes = posts.reduce((sum, p) => sum + (p.likes || 0), 0);
+    const totalViews = posts.reduce((sum, p) => sum + (p.views || 0), 0);
+    const totalComments = posts.reduce((sum, p) => sum + (p.comments || 0), 0);
+
     const audienceStats = {
-      totalUsers: 200,
-      activeUsers: 4000,
-      profileVisitsRenown: 1500,
-      profileVisitsDirect: 1500
+      totalUsers: creator.followers?.length || 0,
+      activeUsers: creator.subscribers?.length || 0,
+      profileVisitsRenown: Math.floor(totalViews * 0.4), // Simulated split
+      profileVisitsDirect: Math.floor(totalViews * 0.6)
     };
 
-    // Mock Sales Stats
     const salesStats = {
-      totalSales: 200,
-      conversionRate: '20%'
+      totalSales: posts.reduce((sum, p) => sum + (p.revenue?.total || 0), 0),
+      conversionRate: audienceStats.totalUsers > 0 ? ((audienceStats.activeUsers / audienceStats.totalUsers) * 100).toFixed(1) + '%' : '0%'
     };
 
-    // Mock Memberships Stats
     const membershipStats = {
-      totalMemberships: 200,
-      totalMembershipMembers: 200,
-      cancelledMembers: 4000,
-      conversionRate: '15%'
+      totalMemberships: 1, // Currently only one type or tier implied
+      totalMembershipMembers: creator.subscribers?.length || 0,
+      cancelledMembers: 0,
+      conversionRate: audienceStats.totalUsers > 0 ? ((creator.subscribers.length / creator.followers.length) * 100).toFixed(1) + '%' : '0%'
     };
 
-    // Revenue chart data
-    const revenueChart = [
-      { date: '20 March, 2026', title: 'Membership name', free: 30, membership: 10, revenue: 600 },
-      { date: '21 March, 2026', title: 'Membership name', free: 35, membership: 12, revenue: 800 },
-      { date: '22 March, 2026', title: 'Membership name', free: 40, membership: 15, revenue: 1000 },
-    ];
+    // Revenue chart data from recent posts or earnings
+    const revenueChart = posts.slice(0, 7).map(p => ({
+      date: new Date(p.createdAt).toLocaleDateString(),
+      title: p.title,
+      free: 0, 
+      membership: creator.subscribers.length, 
+      revenue: p.revenue?.total || 0
+    }));
 
     res.json({
+      subscribers: creator.subscribers || [],
       audienceStats,
       salesStats,
       membershipStats,
-      revenueChart
+      revenueChart,
+      engagement: {
+          totalLikes,
+          totalViews,
+          totalComments
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -431,13 +564,10 @@ const Message = require('../models/Message');
 
 const getMessages = async (req, res) => {
     try {
-        const creator = await Creator.findOne({ userId: req.user._id.toString() });
-        if (!creator) return res.json([]);
-
-        // Get all unique conversations for this user
+        // Get all unique conversations for this user (both sender or recipient)
         const messages = await Message.find({ 
             $or: [{ sender: req.user._id }, { recipient: req.user._id }] 
-        }).sort({ createdAt: -1 }).populate('sender recipient', 'name email');
+        }).sort({ createdAt: -1 }).populate('sender recipient', 'name email avatar');
         
         res.json(messages);
     } catch (err) {
@@ -476,6 +606,7 @@ module.exports = {
   getDashboardData,
   createPost,
   getPosts,
+  getPostById,
   updatePost,
   deletePost,
   updateSocialLinks,

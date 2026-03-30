@@ -5,6 +5,7 @@ const Reaction = require('../models/Reaction');
 const Comment = require('../models/Comment');
 const Review = require('../models/Review');
 const ReviewReply = require('../models/ReviewReply');
+const Notification = require('../models/Notification');
 const jwt = require('jsonwebtoken');
 
 // @desc    Get all creators for discovery
@@ -174,6 +175,23 @@ exports.reactToPost = async (req, res) => {
         post.dislikes = (post.dislikes || 0) + 1;
       }
       await post.save();
+      
+      // Create notification for the creator
+      try {
+        const postCreator = await Creator.findById(post.creatorId);
+        if (postCreator && postCreator.userId !== req.user._id.toString()) {
+          await Notification.create({
+            recipient: postCreator.userId,
+            sender: req.user._id,
+            type: 'like',
+            content: `${req.user.name} liked your post: ${post.title}`,
+            relatedId: post._id
+          });
+        }
+      } catch (notiErr) {
+        console.error("Notification error:", notiErr);
+      }
+
       return res.json({ likes: post.likes, dislikes: post.dislikes, userReaction: type });
     }
 
@@ -240,6 +258,34 @@ exports.addComment = async (req, res) => {
 
     post.comments = (post.comments || 0) + 1;
     await post.save();
+
+    // Create notification for the creator or parent commenter
+    try {
+      const postCreator = await Creator.findById(post.creatorId);
+      
+      if (parentCommentId) {
+        const parentComment = await Comment.findById(parentCommentId).populate('user');
+        if (parentComment && parentComment.user._id.toString() !== req.user._id.toString()) {
+           await Notification.create({
+              recipient: parentComment.user._id,
+              sender: req.user._id,
+              type: 'comment',
+              content: `${req.user.name} replied to your comment on "${post.title}"`,
+              relatedId: post._id
+           });
+        }
+      } else if (postCreator && postCreator.userId !== req.user._id.toString()) {
+        await Notification.create({
+          recipient: postCreator.userId,
+          sender: req.user._id,
+          type: 'comment',
+          content: `${req.user.name} commented on your post: ${post.title}`,
+          relatedId: post._id
+        });
+      }
+    } catch (notiErr) {
+      console.error("Notification error:", notiErr);
+    }
 
     const populatedComment = await Comment.findById(newComment._id).populate('user', 'name avatar');
     res.status(201).json(populatedComment);

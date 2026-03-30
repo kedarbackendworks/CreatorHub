@@ -53,7 +53,7 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
 
           <div className="flex flex-col items-start w-full relative">
             <div className="absolute right-[42px] top-[-48px]">
-              <ProfileActions creatorId={creator._id} />
+              <ProfileActions creatorId={creator._id} creatorUserId={creator.userId} />
             </div>
 
             <div className="flex flex-col gap-[24px] items-start w-full mt-[16px]">

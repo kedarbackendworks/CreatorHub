@@ -12,22 +12,39 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
   const fetchMessages = async () => {
     try {
-      const res = await api.get('/creator/messages');
+      const [messagesRes, userRes] = await Promise.all([
+        api.get('/creator/messages'),
+        api.get('/auth/profile')
+      ]);
+      
+      const currentUserId = userRes.data._id;
+      setCurrentUser(userRes.data);
+      
       // Grouping by conversationId
-      const grouped = res.data.reduce((acc: any, msg: any) => {
+      const grouped = messagesRes.data.reduce((acc: any, msg: any) => {
         if (!acc[msg.conversationId]) acc[msg.conversationId] = [];
         acc[msg.conversationId].push(msg);
         return acc;
       }, {});
       
-      const chatList = Object.keys(grouped).map((id) => ({
-        id,
-        messages: grouped[id],
-        lastMessage: grouped[id][0],
-        participant: grouped[id][0].sender._id === id ? grouped[id][0].recipient : grouped[id][0].sender
-      }));
+      const chatList = Object.keys(grouped).map((id) => {
+          const firstMsg = grouped[id][0];
+          // Determine the participant (the person we are talking to)
+          // Use .toString() to ensure string comparison matches correctly
+          const isSenderMe = firstMsg.sender?._id?.toString() === currentUserId.toString();
+          const participant = isSenderMe ? firstMsg.recipient : firstMsg.sender;
+          
+          return {
+            id,
+            messages: grouped[id],
+            lastMessage: firstMsg,
+            participant
+          };
+      });
 
       setConversations(chatList);
       if (chatList.length > 0 && !selectedChatId) {
@@ -63,6 +80,33 @@ export default function MessagesPage() {
       fetchMessages(); // Refresh chat list
     } catch (err) {
       toast.error("Failed to send");
+    }
+  };
+
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const applyFormat = (prefix: string, suffix: string = prefix) => {
+    if (!textareaRef.current) return;
+    const { selectionStart, selectionEnd, value } = textareaRef.current;
+    if (selectionStart === undefined || selectionEnd === undefined) return;
+
+    const selectedText = value.substring(selectionStart, selectionEnd);
+    const before = value.substring(0, selectionStart);
+    const after = value.substring(selectionEnd);
+    
+    const formatted = `${prefix}${selectedText}${suffix}`;
+    setNewMessage(`${before}${formatted}${after}`);
+  };
+
+  const handleAttachmentClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      toast.success(`File ${file.name} selected (Backend upload integration needed)`);
     }
   };
 
@@ -136,41 +180,53 @@ export default function MessagesPage() {
 
             {/* Messages Feed */}
             <div className="flex-1 overflow-y-auto p-12 space-y-10 flex flex-col-reverse">
-                {messages.map((msg: any) => (
-                  <div key={msg._id} className={`flex items-start gap-4 max-w-2xl ${msg.sender._id !== activeConversation.participant?._id ? 'flex-row-reverse ml-auto' : ''}`}>
-                    <div className={`w-8 h-8 rounded-full border border-white translate-y-2 shadow-sm flex items-center justify-center text-[10px] font-black ${msg.sender._id !== activeConversation.participant?._id ? 'bg-rose-200 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
-                      {msg.sender.name.charAt(0)}
+                {messages.map((msg: any) => {
+                  const senderId = typeof msg.sender === 'object' ? msg.sender?._id : msg.sender;
+                  const isMine = senderId?.toString() === currentUser?._id?.toString();
+                  
+                  return (
+                    <div key={msg._id} className={`flex items-start gap-4 max-w-2xl ${isMine ? 'flex-row-reverse ml-auto' : ''}`}>
+                      <div className={`w-8 h-8 rounded-full border border-white translate-y-2 shadow-sm flex items-center justify-center text-[10px] font-black shrink-0 ${isMine ? 'bg-rose-200 text-rose-700' : 'bg-slate-100 text-slate-600'}`}>
+                        {msg.sender?.name?.charAt(0) || 'U'}
+                      </div>
+                      <div className={`px-6 py-4 rounded-3xl shadow-sm ${isMine ? 'bg-rose-100 text-[#111827] rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'}`}>
+                          <p className="text-[15px] font-medium leading-relaxed">
+                            {msg.text}
+                          </p>
+                      </div>
                     </div>
-                    <div className={`px-6 py-4 rounded-3xl shadow-sm ${msg.sender._id !== activeConversation.participant?._id ? 'bg-rose-100 text-[#111827] rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'}`}>
-                        <p className="text-[15px] font-medium leading-relaxed">
-                          {msg.text}
-                        </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
             </div>
 
             {/* Chat Input Area */}
-            <div className="p-10 shrink-0">
-                <div className="bg-white border border-slate-200 rounded-[28px] overflow-hidden shadow-md">
-                  <div className="p-6">
+            <div className="p-8 shrink-0">
+                <div className="bg-white border border-slate-200 rounded-[24px] overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <div className="p-4">
                     <textarea 
+                      ref={textareaRef}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
                       placeholder="Write your message here" 
-                      className="w-full text-base font-medium text-[#111827] focus:outline-none bg-transparent resize-none min-h-[40px]" 
+                      className="w-full text-[15px] font-medium text-[#111827] focus:outline-none bg-transparent resize-none min-h-[40px] max-h-[200px]" 
                     />
                   </div>
-                  <div className="px-8 pb-6 flex items-center justify-between border-t border-slate-50/50 pt-4">
-                      <div className="flex items-center gap-6 text-slate-400">
-                        <List className="w-5 h-5 cursor-pointer hover:text-slate-700" />
-                        <Italic className="w-5 h-5 cursor-pointer hover:text-slate-700" />
-                        <Bold className="w-5 h-5 cursor-pointer hover:text-slate-700" />
-                        <Paperclip className="w-5 h-5 cursor-pointer hover:text-slate-700" />
+                  <div className="px-6 pb-4 flex items-center justify-between border-t border-slate-50 pt-3">
+                      <div className="flex items-center gap-5 text-slate-300">
+                        <List className="w-4.5 h-4.5 cursor-pointer hover:text-slate-600 transition-colors" onClick={() => applyFormat('- ', '')} />
+                        <Italic className="w-4.5 h-4.5 cursor-pointer hover:text-slate-600 transition-colors" onClick={() => applyFormat('_', '_')} />
+                        <Bold className="w-4.5 h-4.5 cursor-pointer hover:text-slate-600 transition-colors" onClick={() => applyFormat('**', '**')} />
+                        <Paperclip className="w-4.5 h-4.5 cursor-pointer hover:text-slate-600 transition-colors" onClick={handleAttachmentClick} />
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          onChange={handleFileChange}
+                        />
                       </div>
                       <button 
                         onClick={handleSendMessage}
-                        className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2.5 rounded-full text-sm font-bold shadow-md active:scale-95 transition-all"
+                        className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2 rounded-full text-sm font-bold shadow-sm active:scale-95 transition-all"
                       >
                         Send
                       </button>
