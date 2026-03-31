@@ -8,7 +8,6 @@ export default function Navbar() {
   const navLinks = [
     { label: "Home", href: "/", active: pathname === "/" },
     { label: "Marketplace", href: "/marketplace", active: pathname === "/marketplace" },
-    { label: "Features", href: "#", active: pathname === "/features" },
     { label: "Blogs", href: "/blogs", active: pathname === "/blogs" },
     { label: "About Us", href: "/about", active: pathname === "/about" },
   ];

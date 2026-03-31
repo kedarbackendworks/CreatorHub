@@ -6,9 +6,8 @@ import Footer from "../../src/components/Footer";
 function AboutNavbar() {
   const navLinks = [
     { label: "Home", href: "/", active: false },
-    { label: "Marketplace", href: "#", active: false },
-    { label: "Features", href: "#", active: false },
-    { label: "Blogs", href: "#", active: false },
+    { label: "Marketplace", href: "/marketplace", active: false },
+    { label: "Blogs", href: "/blogs", active: false },
     { label: "About Us", href: "/about", active: true },
   ];
 

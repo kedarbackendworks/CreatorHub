@@ -521,8 +521,22 @@ exports.deleteComment = async (req, res) => {
 // @desc    Get reviews for a creator
 exports.getCreatorReviews = async (req, res) => {
   try {
-    const reviews = await Review.find({ creator: req.params.id }).populate('user', 'name avatar').sort({ createdAt: -1 });
-    res.json(reviews);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalCount = await Review.countDocuments({ creator: req.params.id });
+    const reviews = await Review.find({ creator: req.params.id })
+      .populate('user', 'name avatar')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    res.json({
+      reviews,
+      totalPages: Math.ceil(totalCount / limit),
+      totalCount
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
