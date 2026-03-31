@@ -22,7 +22,14 @@ const {
   createLivestream,
   getLivestreams,
   getMessages,
-  sendMessage
+  uploadMessageMediaHandler,
+  sendMessage,
+  deleteMessage,
+  editMessage,
+  reactToMessage,
+  blockUser,
+  getBlockStatus,
+  markConversationSeen
 } = require('../controllers/creatorController');
 
 router.use(protect);
@@ -49,7 +56,14 @@ router.get('/livestreams', getLivestreams);
 
 // Messaging
 router.get('/messages', getMessages);
+router.post('/messages/upload-media', uploadMessageMediaHandler);
 router.post('/messages', sendMessage);
+router.put('/messages/seen/:conversationId', markConversationSeen);
+router.put('/messages/:id/delete', deleteMessage);
+router.put('/messages/:id/edit', editMessage);
+router.post('/messages/:id/react', reactToMessage);
+router.post('/block/:userId', blockUser);
+router.get('/block/:userId', getBlockStatus);
 
 // Post routing
 router.post('/posts', createPost);

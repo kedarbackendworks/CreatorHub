@@ -30,7 +30,14 @@ const {
 
 const {
   getMessages,
-  sendMessage
+  uploadMessageMediaHandler,
+  sendMessage,
+  deleteMessage,
+  editMessage,
+  reactToMessage,
+  blockUser,
+  getBlockStatus,
+  markConversationSeen
 } = require('../controllers/creatorController');
 
 // Public routes
@@ -51,7 +58,14 @@ router.get('/notifications', getUserNotifications);
 router.put('/notifications/mark-all-read', markAllUserNotificationsRead);
 router.put('/notifications/:id/read', markUserNotificationRead);
 router.get('/messages', getMessages);
+router.post('/messages/upload-media', uploadMessageMediaHandler);
 router.post('/messages', sendMessage);
+router.put('/messages/seen/:conversationId', markConversationSeen);
+router.put('/messages/:id/delete', deleteMessage);
+router.put('/messages/:id/edit', editMessage);
+router.post('/messages/:id/react', reactToMessage);
+router.post('/block/:userId', blockUser);
+router.get('/block/:userId', getBlockStatus);
 router.get('/following', getFollowingCreators);
 router.post('/follow/:creatorId', toggleFollowCreator);
 router.post('/subscribe/:creatorId', toggleSubscription);

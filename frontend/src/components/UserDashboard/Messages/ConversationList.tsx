@@ -10,22 +10,23 @@ interface ConversationListProps {
 
 export default function ConversationList({ conversations, selectedId, onSelect }: ConversationListProps) {
   return (
-    <div className="bg-[var(--bg,#f6f4f1)] border-[var(--alt-sec,#e4ded2)] border-r-[0.5px] border-solid flex flex-col h-screen w-[304px] shrink-0">
-      <div className="px-[16px] pt-[24px] pb-[16px] shrink-0 flex flex-col gap-[20px]">
-        <h2 className="font-[family-name:var(--font-fjalla)] leading-[42.1px] text-[color:var(--heading,#1a1a1a)] text-[28px] tracking-[0.56px]">
+    <div className="bg-[#faf8f5] border-r border-[#e4ded2] flex flex-col h-screen w-[304px] shrink-0">
+      <div className="px-[24px] pt-[24px] pb-[16px] shrink-0">
+        <h2 className="font-[family-name:var(--font-fjalla)] text-[#1a1a1a] text-[28px] leading-none">
           Your Messages
         </h2>
-        <div className="border-[#d2d8e3] border-[0.5px] border-solid bg-[#fefefe] flex gap-[8px] items-center px-[12px] py-[8px] rounded-[20px] w-full relative shadow-[inset_0px_-1px_4px_0px_rgba(236,238,246,0.25)]">
-          <Search className="size-[16px] text-[#aaa] shrink-0" />
+      </div>
+
+      <div className="mx-[16px] mb-[16px] border border-[#e4ded2] bg-white flex gap-[8px] items-center px-[16px] py-[8px] rounded-[20px] w-auto relative shadow-sm">
+          <Search className="w-[16px] h-[16px] text-[#aaa] shrink-0" />
           <input 
             type="text" 
             placeholder="Search conversation" 
-            className="font-['Inter'] font-normal text-[12px] bg-transparent outline-none flex-1 text-[#aaa] placeholder:text-[#aaa]"
+            className="font-[family-name:var(--font-figtree)] font-normal text-[13px] bg-transparent outline-none flex-1 text-[#5a5a5a] placeholder:text-[#aaa]"
           />
-        </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col pb-[24px]">
+      <div className="flex-1 overflow-y-auto flex flex-col">
         {conversations.map((conv) => (
           <ConversationItem 
             key={conv.id}

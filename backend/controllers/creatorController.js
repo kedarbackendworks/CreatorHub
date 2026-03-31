@@ -7,6 +7,8 @@ const Creator = require('../models/Creator');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const Livestream = require('../models/Livestream');
+const Message = require('../models/Message');
+const Block = require('../models/Block');
 
 // --- Dashboard ---
 const getDashboardData = async (req, res) => {
@@ -142,6 +144,66 @@ const upload = multer({ storage: multer.memoryStorage() }).fields([
   { name: 'file', maxCount: 1 },
   { name: 'thumbnail', maxCount: 1 }
 ]);
+
+const uploadSingle = multer({ storage: multer.memoryStorage() }).single('media');
+
+const uploadMessageMedia = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    const isVideo = req.file.mimetype.startsWith('video/');
+    const isImage = req.file.mimetype.startsWith('image/');
+
+    if (!isVideo && !isImage) {
+      return res.status(400).json({ error: 'Only image and video files are supported' });
+    }
+
+    // 10MB limit for images, 50MB for videos
+    const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (req.file.size > maxSize) {
+      return res.status(400).json({
+        error: `File too large. Max size: ${isVideo ? '50MB' : '10MB'}`
+      });
+    }
+
+    const streamUpload = () => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: isVideo ? 'video' : 'image',
+            folder: 'logoipsum_messages'
+          },
+          (error, result) => {
+            if (result) resolve(result);
+            else reject(error);
+          }
+        );
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+    };
+
+    const result = await streamUpload();
+
+    res.json({
+      mediaUrl: result.secure_url,
+      mediaType: isVideo ? 'video' : 'image',
+      thumbnailUrl: isVideo
+        ? result.secure_url.replace('/upload/', '/upload/so_0/').replace(/\.[^/.]+$/, '.jpg')
+        : null
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const uploadMessageMediaHandler = (req, res) => {
+  uploadSingle(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    uploadMessageMedia(req, res);
+  });
+};
 
 const createPost = async (req, res) => {
   upload(req, res, async (err) => {
@@ -571,46 +633,273 @@ const getLivestreams = async (req, res) => {
     }
 };
 
-const Message = require('../models/Message');
+const getParticipantId = (participant) => {
+  if (!participant) return '';
+  if (typeof participant === 'string') return participant;
+  if (participant._id) return participant._id.toString();
+  return participant.toString();
+};
 
 const getMessages = async (req, res) => {
-    try {
-        // Get all unique conversations for this user (both sender or recipient)
-        const messages = await Message.find({ 
-            $or: [{ sender: req.user._id }, { recipient: req.user._id }] 
-        }).sort({ createdAt: -1 }).populate('sender recipient', 'name email avatar');
-        
-        res.json(messages);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    await Message.updateMany(
+      { recipient: req.user._id, status: 'sent' },
+      { $set: { status: 'delivered' } }
+    );
+
+    const userId = req.user._id.toString();
+    const messages = await Message.find({
+      $or: [{ sender: req.user._id }, { recipient: req.user._id }],
+      hiddenFor: { $nin: [req.user._id] }
+    }).sort({ createdAt: -1 }).populate('sender recipient', 'name email avatar');
+
+    const blocks = await Block.find({
+      $or: [{ blocker: req.user._id }, { blocked: req.user._id }]
+    }).select('blocker blocked');
+
+    const blockedUserIds = new Set(
+      blocks.map((blockDoc) =>
+        blockDoc.blocker.toString() === userId
+          ? blockDoc.blocked.toString()
+          : blockDoc.blocker.toString()
+      )
+    );
+
+    const filteredMessages = messages.filter((message) => {
+      const senderId = getParticipantId(message.sender);
+      const recipientId = getParticipantId(message.recipient);
+      const otherParticipantId = senderId === userId ? recipientId : senderId;
+      return !blockedUserIds.has(otherParticipantId);
+    });
+
+    res.json(filteredMessages);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 const sendMessage = async (req, res) => {
-    try {
-        const { recipientId, text, mediaUrl, mediaType } = req.body;
-        const message = await Message.create({
-            conversationId: [req.user._id, recipientId].sort().join('_'),
-            sender: req.user._id,
-            recipient: recipientId,
-            text,
-            mediaUrl,
-            mediaType
-        });
+  try {
+    const { recipientId, text, mediaUrl, mediaType, thumbnailUrl, encryptedText, nonce, isEncrypted, replyTo } = req.body;
 
-        // Create a notification for the recipient
-        await Notification.create({
-            recipient: recipientId,
-            sender: req.user._id,
-            type: 'message',
-            content: `You received a new message from ${req.user.name}`,
-            relatedId: message._id
-        });
-
-        res.status(201).json(message);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    if (!recipientId) {
+      return res.status(400).json({ error: 'recipientId is required' });
     }
+
+    if (!text && !encryptedText && !mediaUrl) {
+      return res.status(400).json({ error: 'Message content is required' });
+    }
+
+    const existingBlock = await Block.findOne({
+      $or: [
+        { blocker: req.user._id, blocked: recipientId },
+        { blocker: recipientId, blocked: req.user._id }
+      ]
+    });
+
+    if (existingBlock) {
+      return res.status(403).json({ error: 'Cannot send message. User is blocked.' });
+    }
+
+    const conversationId = [req.user._id.toString(), recipientId.toString()].sort().join('_');
+    const message = await Message.create({
+      conversationId,
+      sender: req.user._id,
+      recipient: recipientId,
+      text: text || '',
+      mediaUrl,
+      mediaType,
+      thumbnailUrl: thumbnailUrl || '',
+      encryptedText: encryptedText || '',
+      nonce: nonce || '',
+      isEncrypted: Boolean(isEncrypted && encryptedText && nonce),
+      ...(replyTo ? { replyTo } : {})
+    });
+
+    await Notification.create({
+      recipient: recipientId,
+      sender: req.user._id,
+      type: 'message',
+      content: `You received a new message from ${req.user.name}`,
+      relatedId: message._id
+    });
+
+    res.status(201).json(message);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const deleteMessage = async (req, res) => {
+  try {
+    const { deleteType } = req.body;
+    const message = await Message.findById(req.params.id);
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    if (deleteType === 'for_everyone') {
+      if (message.sender.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ error: 'Only the sender can delete for everyone' });
+      }
+
+      message.isDeleted = true;
+      message.deletedAt = new Date();
+      message.text = '';
+      message.encryptedText = '';
+      message.nonce = '';
+
+      await message.save();
+      return res.json({ ...message.toObject(), deleteType: 'for_everyone' });
+    }
+
+    if (deleteType === 'for_me') {
+      const hiddenFor = message.hiddenFor || [];
+      const alreadyHidden = hiddenFor.some(
+        (userId) => userId.toString() === req.user._id.toString()
+      );
+
+      if (!alreadyHidden) {
+        hiddenFor.push(req.user._id);
+      }
+
+      message.hiddenFor = hiddenFor;
+      await message.save();
+      return res.json({ ...message.toObject(), deleteType: 'for_me' });
+    }
+
+    return res.status(400).json({ error: 'Invalid deleteType' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const editMessage = async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.id);
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    if (message.sender.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to edit this message' });
+    }
+
+    if (message.isDeleted) {
+      return res.status(400).json({ error: 'Cannot edit a deleted message' });
+    }
+
+    const { text, encryptedText, nonce } = req.body;
+    if (typeof text === 'string') {
+      message.text = text;
+    }
+
+    if (encryptedText) {
+      message.encryptedText = encryptedText;
+      message.nonce = nonce || '';
+      message.isEncrypted = true;
+    } else if (typeof text === 'string') {
+      message.isEncrypted = false;
+      message.encryptedText = '';
+      message.nonce = '';
+    }
+
+    message.isEdited = true;
+    message.editedAt = new Date();
+
+    await message.save();
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const reactToMessage = async (req, res) => {
+  try {
+    const message = await Message.findById(req.params.id);
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+
+    const { emoji } = req.body;
+    if (!emoji) {
+      return res.status(400).json({ error: 'emoji is required' });
+    }
+
+    const userId = req.user._id.toString();
+    const userReactions = message.reactions.filter(
+      (reaction) => reaction.userId.toString() === userId
+    );
+    const hasSameEmoji = userReactions.some((reaction) => reaction.emoji === emoji);
+
+    // Keep at most one reaction per user on each message.
+    message.reactions = message.reactions.filter(
+      (reaction) => reaction.userId.toString() !== userId
+    );
+
+    if (!hasSameEmoji) {
+      message.reactions.push({ userId: req.user._id, emoji });
+    }
+
+    await message.save();
+    res.json(message);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const blockUser = async (req, res) => {
+  try {
+    const blockedUserId = req.params.userId;
+    if (req.user._id.toString() === blockedUserId.toString()) {
+      return res.status(400).json({ error: 'You cannot block yourself' });
+    }
+
+    const existingBlock = await Block.findOne({
+      blocker: req.user._id,
+      blocked: blockedUserId
+    });
+
+    if (existingBlock) {
+      await existingBlock.deleteOne();
+      return res.json({ message: 'User unblocked', blocked: false });
+    }
+
+    await Block.create({ blocker: req.user._id, blocked: blockedUserId });
+    res.json({ message: 'User blocked', blocked: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const getBlockStatus = async (req, res) => {
+  try {
+    const block = await Block.findOne({
+      blocker: req.user._id,
+      blocked: req.params.userId
+    });
+
+    res.json({ isBlocked: Boolean(block) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+const markConversationSeen = async (req, res) => {
+  try {
+    await Message.updateMany(
+      {
+        conversationId: req.params.conversationId,
+        recipient: req.user._id,
+        status: { $in: ['sent', 'delivered'] }
+      },
+      { $set: { status: 'seen' } }
+    );
+
+    res.json({ message: 'Marked as seen' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 module.exports = {
@@ -633,6 +922,13 @@ module.exports = {
   updatePayoutSettings,
   createLivestream,
   getLivestreams,
+  uploadMessageMediaHandler,
   getMessages,
-  sendMessage
+  sendMessage,
+  deleteMessage,
+  editMessage,
+  reactToMessage,
+  blockUser,
+  getBlockStatus,
+  markConversationSeen
 };

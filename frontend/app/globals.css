@@ -18,6 +18,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Figtree', Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
 @keyframes marquee {
@@ -37,4 +38,19 @@ body {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+}
+
+em-emoji-picker {
+  --background-rgb: 255, 255, 255;
+  --border-radius: 16px;
+  --category-icon-size: 18px;
+  --font-family: 'Figtree', sans-serif;
+  --color-border: #e4ded2;
+  --color-border-over: #f95c4b;
+  --rgb-accent: 249, 92, 75;
+  --rgb-background: 250, 248, 245;
+  --rgb-color: 26, 26, 26;
+  --rgb-input: 246, 244, 241;
+  height: 400px;
+  width: 352px;
 }

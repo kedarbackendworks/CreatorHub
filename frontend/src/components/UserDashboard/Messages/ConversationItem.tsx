@@ -19,9 +19,9 @@ export default function ConversationItem({ conversation, isActive, onClick }: Co
   return (
     <div 
       onClick={onClick}
-      className={`border-[var(--alt-sec,#e4ded2)] border-b border-t-[0.5px] border-solid flex gap-[8px] items-center px-[16px] py-[12px] relative shrink-0 w-full cursor-pointer transition-colors ${isActive ? 'bg-[var(--bg-2,#faf8f5)]' : 'hover:bg-[#fcfaf7]'}`}
+      className={`flex gap-[12px] items-center px-[16px] py-[12px] relative shrink-0 w-full cursor-pointer transition-colors border-b border-[#e4ded2]/60 ${isActive ? 'bg-white border-l-4 border-l-[#f95c4b]' : 'hover:bg-[#faf8f5]'}`}
     >
-      <div className="flex flex-col items-start overflow-hidden relative rounded-[31px] shrink-0 size-[40px]">
+      <div className="flex flex-col items-start overflow-hidden relative rounded-full shrink-0 w-[44px] h-[44px] border border-[#e4ded2] bg-[#f95c4b]/10 shadow-sm">
         <Image 
           src={conversation.avatar} 
           alt={conversation.name} 
@@ -31,15 +31,15 @@ export default function ConversationItem({ conversation, isActive, onClick }: Co
       </div>
       <div className="flex flex-[1_0_0] flex-col items-start min-w-0 relative">
         <div className="flex items-center justify-between relative shrink-0 w-full">
-          <p className={`font-[family-name:var(--font-figtree)] ${conversation.isUnread ? 'font-bold text-[#1a1a1a]' : 'font-bold text-[var(--body,#5a5a5a)]'} leading-[25.8px] relative shrink-0 text-[16px] tracking-[0.32px] truncate`}>
+          <p className={`font-[family-name:var(--font-figtree)] ${conversation.isUnread ? 'font-semibold text-[#1a1a1a]' : 'font-semibold text-[#1a1a1a]'} relative shrink-0 text-[15px] truncate`}>
             {conversation.name}
           </p>
           {conversation.isUnread && (
-            <div className="w-[8px] h-[8px] rounded-full bg-[var(--cta,#f95c4b)] shrink-0" />
+            <div className="w-[8px] h-[8px] rounded-full bg-[#f95c4b] shrink-0" />
           )}
         </div>
         <div className="flex items-center relative shrink-0 w-full">
-          <p className={`font-[family-name:var(--font-figtree)] font-medium leading-[18.3px] relative shrink-0 ${conversation.isUnread ? 'text-[#3a3a3a]' : 'text-[var(--body,#5a5a5a)]'} text-[13px] tracking-[0.26px] truncate max-w-[90%]`}>
+          <p className={`font-[family-name:var(--font-figtree)] font-normal leading-[1.35] relative shrink-0 ${conversation.isUnread ? 'text-[#3a3a3a]' : 'text-[#5a5a5a]'} text-[13px] truncate max-w-[90%]`}>
             {conversation.lastMessage}
           </p>
         </div>
