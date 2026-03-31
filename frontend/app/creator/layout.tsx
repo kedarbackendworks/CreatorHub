@@ -142,13 +142,13 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
               <div className="h-6 w-px bg-slate-200 mx-2"></div>
 
               <div className="flex items-center gap-5">
-                 <button className="text-slate-400 hover:text-slate-600 transition-colors">
-                   <History className="w-5 h-5 stroke-[1.5]" />
-                 </button>
-                 <button className="text-slate-400 hover:text-slate-600 transition-colors relative">
-                   <Bell className="w-5 h-5 stroke-[1.5]" />
-                   <div className="absolute top-0 right-0 w-2 h-2 bg-rose-500 border border-white rounded-full"></div>
-                 </button>
+                  <Link href="/creator/library" className="text-slate-400 hover:text-slate-600 transition-colors">
+                    <History className="w-5 h-5 stroke-[1.5]" />
+                  </Link>
+                  <Link href="/creator/notifications" className="text-slate-400 hover:text-slate-600 transition-colors relative">
+                    <Bell className="w-5 h-5 stroke-[1.5]" />
+                    <div className="absolute top-0 right-0 w-2 h-2 bg-rose-500 border border-white rounded-full"></div>
+                  </Link>
                  
                  <div className="flex items-center gap-3 pl-2 group cursor-pointer">
                     <div className="text-right hidden md:block">

@@ -15,6 +15,7 @@ const postSchema = mongoose.Schema(
     
     // Engagement
     views: { type: Number, default: 0 },
+    uniqueViewers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     likes: { type: Number, default: 0 },
     dislikes: { type: Number, default: 0 },
     comments: { type: Number, default: 0 },

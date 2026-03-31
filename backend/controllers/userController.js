@@ -284,10 +284,19 @@ exports.getPostDetails = async (req, res) => {
     }
 
     if (userId) {
+      // Increment views and track unique viewers
+      await Post.findByIdAndUpdate(req.params.id, {
+        $inc: { views: 1 },
+        $addToSet: { uniqueViewers: userId }
+      });
+
       const reaction = await Reaction.findOne({ user: userId, post: post._id });
       if (reaction) {
         userReaction = reaction.type;
       }
+    } else {
+      // For guests, still increment total views but cannot track unique viewer by ID
+      await Post.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
     }
 
     res.json({

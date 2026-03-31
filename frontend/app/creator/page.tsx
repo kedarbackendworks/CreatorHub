@@ -255,8 +255,12 @@ export default function CreatorHomePage() {
                      onClick={() => router.push(`/creator/post/${post.id}`)}
                      className="bg-white border border-slate-200/60 rounded-3xl overflow-hidden group hover:shadow-xl transition-all cursor-pointer flex flex-col"
                    >
-                       <div className="relative aspect-square">
-                          <img src={post.thumbnailUrl || post.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
+                       <div className="relative aspect-square flex items-center justify-center">
+                          {post.type === 'file' ? (
+                             <div className="w-full h-full flex items-center justify-center bg-slate-50 text-7xl select-none">📄</div>
+                           ) : (
+                             <img src={post.thumbnailUrl || post.img} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
+                           )}
                           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
                           {post.type === 'video' && (
                             <div className="absolute top-4 right-4 w-10 h-10 bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/20">

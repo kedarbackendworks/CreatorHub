@@ -120,7 +120,13 @@ export default function ContentLibraryPage() {
                 <tr key={item._id} className="hover:bg-slate-50 transition-colors cursor-pointer group">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-5">
-                      <img src={item.thumbnailUrl || item.mediaUrl || 'https://via.placeholder.com/100'} alt="Post" className="w-14 h-12 object-cover rounded-xl border border-slate-200 shadow-sm" />
+                      <div className="w-14 h-12 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 shadow-sm shrink-0">
+                         {item.mediaType === 'file' ? (
+                           <div className="text-3xl">📄</div>
+                         ) : (
+                           <img src={item.thumbnailUrl || item.mediaUrl || 'https://via.placeholder.com/100'} alt="Post" className="w-full h-full object-cover rounded-xl" />
+                         )}
+                      </div>
                       <span className="text-[15px] font-bold text-[#1c1917] group-hover:text-rose-500 transition-colors leading-tight">{item.title}</span>
                     </div>
                   </td>

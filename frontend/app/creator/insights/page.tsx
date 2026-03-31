@@ -56,9 +56,10 @@ export default function InsightsPage() {
    const postPerformance = (data?.postRevenueBreakdown || []).map((post: any) => ({
       id: post.id,
       title: post.title,
-      renown: post.views || 0,
-      other: Math.floor((post.views || 0) * 0.2),
-      img: post.thumbnailUrl || (post.type === 'image' ? post.mediaUrl : 'https://via.placeholder.com/600x400')
+      type: post.type,
+      renown: post.uniqueViews || 0,
+      other: post.views || 0,
+      img: post.thumbnailUrl || (post.type === 'image' ? post.mediaUrl : '')
    }));
 
    const toggleMenu = (id: React.Key | null | undefined, e: React.MouseEvent) => {
@@ -288,8 +289,8 @@ export default function InsightsPage() {
                            <thead className="bg-[#fafafa] border-b border-slate-200">
                               <tr>
                                  <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400 w-1/3">Post Title</th>
-                                 <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Reach (Renown)</th>
-                                 <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">External Views</th>
+                                 <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Reach (Unique ID)</th>
+                                 <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400">Total Views</th>
                                  <th className="px-8 py-5 text-[11px] font-black uppercase tracking-widest text-slate-400 text-right pr-12">Actions</th>
                               </tr>
                            </thead>
@@ -298,8 +299,14 @@ export default function InsightsPage() {
                                  <tr key={post.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-8 py-4">
                                        <div className="flex items-center gap-4">
-                                          <img src={post.img} className="w-12 h-12 rounded-xl object-cover border border-slate-100" alt="Post" />
-                                          <span className="text-[14px] font-black text-[#1c1917] font-['Fjalla One'] uppercase">{post.title}</span>
+                                       <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
+                                          {post.type === 'file' ? (
+                                             <div className="text-3xl">📄</div>
+                                          ) : (
+                                             <img src={post.img} className="w-full h-full rounded-xl object-cover" alt="Post" />
+                                          )}
+                                       </div>
+                                       <span className="text-[14px] font-black text-[#1c1917] font-['Fjalla One'] uppercase line-clamp-1">{post.title}</span>
                                        </div>
                                     </td>
                                     <td className="px-8 py-4 text-[16px] font-black text-slate-700 font-['Fjalla One']">{post.renown}</td>

@@ -38,6 +38,7 @@ const getDashboardData = async (req, res) => {
       revenueExclusive: p.revenue?.breakdown?.directPurchase || 0,
       total: p.revenue?.total || 0,
       views: p.views || 0,
+      uniqueViews: p.uniqueViewers ? p.uniqueViewers.length : 0,
       likes: p.likes || 0,
       comments: p.comments || 0,
       thumbnailUrl: p.thumbnailUrl || (p.mediaType === 'image' ? p.mediaUrl : ''),
