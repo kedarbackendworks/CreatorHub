@@ -68,38 +68,57 @@ const getDashboardData = async (req, res) => {
   }
 };
 
+const profileUpload = multer({ storage: multer.memoryStorage() }).fields([
+  { name: 'avatar', maxCount: 1 },
+  { name: 'banner', maxCount: 1 }
+]);
+
 const updateCreatorProfile = async (req, res) => {
-  upload(req, res, async (err) => {
+  profileUpload(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
 
     try {
       let creator = await Creator.findOne({ userId: req.user._id.toString() });
       if (!creator) return res.status(404).json({ error: 'Creator not found' });
 
-      const { name, username, bio } = req.body;
-
+      const { name, username, bio, category, instagram, facebook, twitter, tiktok } = req.body;
+      
       if (name) creator.name = name;
       if (username) creator.username = username.toLowerCase().replace(' ', '');
       if (bio !== undefined) creator.bio = bio;
-
-      if (req.file) {
-        const streamUpload = (req) => {
-          return new Promise((resolve, reject) => {
-            let stream = cloudinary.uploader.upload_stream(
-              { resource_type: 'auto', folder: 'logoipsum_avatars' },
-              (error, result) => {
-                if (result) resolve(result);
-                else reject(error);
-              }
-            );
-            streamifier.createReadStream(req.file.buffer).pipe(stream);
-          });
-        };
-        const result = await streamUpload(req);
-        creator.avatar = result.secure_url;
-      } else if (req.body.avatar) {
-        creator.avatar = req.body.avatar;
+      if (category) creator.category = category;
+      
+      if (creator.socialLinks) {
+        if (instagram !== undefined) creator.socialLinks.instagram = instagram;
+        if (facebook !== undefined) creator.socialLinks.facebook = facebook;
+        if (twitter !== undefined) creator.socialLinks.twitter = twitter;
+        if (tiktok !== undefined) creator.socialLinks.tiktok = tiktok;
       }
+
+      const handleUpload = async (file, folder) => {
+        return new Promise((resolve, reject) => {
+          let stream = cloudinary.uploader.upload_stream(
+            { resource_type: 'auto', folder },
+            (error, result) => {
+              if (result) resolve(result.secure_url);
+              else reject(error);
+            }
+          );
+          streamifier.createReadStream(file.buffer).pipe(stream);
+        });
+      };
+
+      if (req.files) {
+        if (req.files.avatar && req.files.avatar[0]) {
+           creator.avatar = await handleUpload(req.files.avatar[0], 'logoipsum_avatars');
+        }
+        if (req.files.banner && req.files.banner[0]) {
+           creator.banner = await handleUpload(req.files.banner[0], 'logoipsum_banners');
+        }
+      }
+
+      if (req.body.avatar) creator.avatar = req.body.avatar;
+      if (req.body.banner) creator.banner = req.body.banner;
 
       await creator.save();
       
@@ -448,7 +467,7 @@ const getSubscribers = async (req, res) => {
 
 const getInsightsData = async (req, res) => {
   try {
-    let creator = await Creator.findOne({ userId: req.user._id.toString() });
+    let creator = await Creator.findOne({ userId: req.user._id.toString() }).populate('subscribers', 'name email avatar createdAt');
     if (!creator) return res.status(404).json({ error: 'Creator not found' });
 
     const posts = await Post.find({ creatorId: creator._id });
@@ -585,7 +604,7 @@ const createLivestream = async (req, res) => {
             let creator = await Creator.findOne({ userId: req.user._id.toString() });
             if (!creator) return res.status(404).json({ error: 'Creator profile missing' });
 
-            const { title, description, audience, scheduledTime, settings } = req.body;
+            const { title, description, audience, scheduledTime, settings, status } = req.body;
             let thumbnail = '';
 
             if (req.file) {
@@ -611,6 +630,8 @@ const createLivestream = async (req, res) => {
                 thumbnail: thumbnail || 'https://via.placeholder.com/600x400',
                 audience,
                 scheduledTime,
+                status: status || 'scheduled',
+                startedAt: status === 'live' ? new Date() : undefined,
                 creatorId: creator._id,
                 settings: settings ? JSON.parse(settings) : { displayChat: true, notificationsEnabled: true, autoModeration: true }
             });

@@ -19,6 +19,8 @@ const userSchema = mongoose.Schema(
     favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
     memberships: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Creator' }],
     lastLogin: { type: Date, default: Date.now },
+    otp: { type: String },
+    otpExpires: { type: Date },
   },
   { timestamps: true }
 );

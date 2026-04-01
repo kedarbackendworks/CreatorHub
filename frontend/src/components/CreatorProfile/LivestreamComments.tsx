@@ -1,162 +1,116 @@
-"use client";
+'use client'
 
-import React from 'react';
-import { MessageSquare, Smile } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react'
+import { Send, Smile, MessageSquare } from 'lucide-react'
+import type { ChatMessage } from '@/src/hooks/useLiveChat'
 
-export default function LivestreamComments() {
-  // Static placeholder data matching Figma structure
-  const comments = [
-    {
-      id: 1,
-      name: "Jane Doe",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&h=256&auto=format&fit=crop",
-      text: "I really appreciate the insights and perspective shared in this article. It's definitely given me something to think about and has helped me see things from a different angle. Thank you for writing and sharing!",
-      timeRemaining: "5 min ago",
-      replies: [
-        {
-          id: 101,
-          name: "Jane Doe",
-          avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&h=256&auto=format&fit=crop",
-          text: "I really appreciate the insights and perspective shared in this article. It's definitely given me something to think about and has helped me see things from a different angle. Thank you for writing and sharing!",
-          timeRemaining: "5 min ago"
-        },
-        {
-          id: 102,
-          name: "Jane Doe",
-          avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&h=256&auto=format&fit=crop",
-          text: "I really appreciate the insights and perspective shared in this article. It's definitely given me something to think about and has helped me see things from a different angle. Thank you for writing and sharing!",
-          timeRemaining: "5 min ago"
-        }
-      ],
-      isRepliesExpanded: true
-    },
-    {
-      id: 2,
-      name: "Jane Doe",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&h=256&auto=format&fit=crop",
-      text: "I really appreciate the insights and perspective shared in this article. It's definitely given me something to think about and has helped me see things from a different angle. Thank you for writing and sharing!",
-      timeRemaining: "5 min ago",
-      replies: [],
-      isRepliesExpanded: false
-    },
-    {
-      id: 3,
-      name: "Jane Doe",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=256&h=256&auto=format&fit=crop",
-      text: "I really appreciate the insights and perspective shared in this article. It's definitely given me something to think about and has helped me see things from a different angle. Thank you for writing and sharing!",
-      timeRemaining: "5 min ago",
-      replies: [],
-      isRepliesExpanded: false
+interface LivestreamCommentsProps {
+  messages: ChatMessage[]
+  onSendMessage: (text: string) => void
+  streamEnded?: boolean
+}
+
+export default function LivestreamComments({
+  messages,
+  onSendMessage,
+  streamEnded = false,
+}: LivestreamCommentsProps) {
+  const [input, setInput] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  ];
+  }, [messages])
+
+  const handleSend = () => {
+    if (!input.trim() || streamEnded) return
+    onSendMessage(input.trim())
+    setInput('')
+  }
 
   return (
-    <div className="bg-[#fcfaf7] border-[0.5px] border-[var(--alt-sec,#e4ded2)] rounded-[12px] p-[24px] w-full max-w-[1116px] flex flex-col items-start justify-center gap-[24px] mt-[48px] shadow-sm">
-      
-      {/* Header */}
-      <div className="flex items-center gap-[12px] justify-center">
-        <MessageSquare className="size-[24px] text-[var(--heading,#1a1a1a)]" />
-        <h2 className="font-[family-name:var(--font-figtree)] font-semibold text-[19px] leading-[29.2px] tracking-[0.38px] text-[var(--heading,#1a1a1a)]">
-          Comments ( 20,000 )
-        </h2>
-      </div>
+    <div className="space-y-6">
+      <h3 className="text-xl font-black text-[#1c1917] flex items-center gap-3 tracking-tight">
+        <MessageSquare className="w-6 h-6" /> Live Chat
+        <span className="text-sm font-bold text-slate-400">({messages.length})</span>
+      </h3>
 
-      {/* Comments List */}
-      <div className="flex flex-col gap-[24px] items-start w-full">
-        {comments.map((comment) => (
-          <div key={comment.id} className="flex flex-col gap-[16px] items-start w-full">
-            
-            {/* Main Comment */}
-            <div className="flex flex-col gap-[8px] items-start w-full">
-              <div className="flex items-center gap-[12px]">
-                <img src={comment.avatar} alt="Avatar" className="size-[40px] rounded-full object-cover shadow-sm" />
-                <span className="font-[family-name:var(--font-figtree)] font-bold text-[16px] leading-[25.8px] tracking-[0.32px] text-[var(--sub-head,#3a3a3a)]">
-                  {comment.name}
-                </span>
-              </div>
-              <p className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--body,#5a5a5a)] min-w-full">
-                {comment.text}
-              </p>
-              
-              <div className="flex items-start gap-[15px] mt-[4px]">
-                <span className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--place-holder,#9a9a9a)]">
-                  {comment.timeRemaining}
-                </span>
-                <button className="font-[family-name:var(--font-figtree)] font-semibold text-[14px] leading-normal text-[var(--place-holder,#9a9a9a)] hover:text-black transition-colors">
-                  View replies ( 20 )
-                </button>
-                <button className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--body,#5a5a5a)] hover:text-black transition-colors">
-                  Reply
-                </button>
+      {/* Chat messages */}
+      <div
+        ref={scrollRef}
+        className="space-y-5 max-h-[400px] overflow-y-auto pr-2 scroll-smooth"
+        style={{
+          scrollbarWidth: 'thin',
+          scrollbarColor: '#e2e8f0 transparent',
+        }}
+      >
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+              <MessageSquare className="w-7 h-7 text-slate-400" />
+            </div>
+            <p className="text-slate-500 font-bold text-sm">
+              {streamEnded
+                ? 'No messages were sent during this stream.'
+                : 'No messages yet. Be the first to say something!'}
+            </p>
+          </div>
+        ) : (
+          messages.map((msg, idx) => (
+            <div key={idx} className="flex items-start gap-3 group">
+              <img
+                src={msg.avatar || `https://i.pravatar.cc/150?u=${msg.userId}`}
+                className="w-9 h-9 rounded-full border border-slate-200 shadow-sm shrink-0 mt-0.5"
+                alt={msg.userName}
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2.5 mb-0.5">
+                  <p className="text-[14px] font-black text-[#111827] truncate">{msg.userName}</p>
+                  <p className="text-[11px] font-bold text-slate-400 shrink-0">
+                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+                <p className="text-[13px] font-medium text-slate-600 leading-relaxed break-words">
+                  {msg.text}
+                </p>
               </div>
             </div>
-
-            {/* Nested Replies */}
-            {comment.isRepliesExpanded && comment.replies.length > 0 && (
-              <div className="flex flex-col gap-[16px] items-start pl-[40px] w-full mt-[8px]">
-                {comment.replies.map((reply) => (
-                  <div key={reply.id} className="flex flex-col gap-[8px] items-start w-full">
-                    <div className="flex items-center gap-[12px]">
-                      <img src={reply.avatar} alt="Avatar" className="size-[28px] rounded-full object-cover shadow-sm" />
-                      <span className="font-[family-name:var(--font-figtree)] font-bold text-[16px] leading-[25.8px] tracking-[0.32px] text-[var(--sub-head,#3a3a3a)]">
-                        {reply.name}
-                      </span>
-                    </div>
-                    <p className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--body,#5a5a5a)] min-w-full">
-                      {reply.text}
-                    </p>
-                    <div className="flex items-start gap-[15px] mt-[4px]">
-                      <span className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--place-holder,#9a9a9a)]">
-                        {reply.timeRemaining}
-                      </span>
-                      <button className="font-[family-name:var(--font-figtree)] font-semibold text-[14px] leading-normal text-[var(--place-holder,#9a9a9a)] hover:text-black transition-colors">
-                        View replies ( 20 )
-                      </button>
-                      <button className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--body,#5a5a5a)] hover:text-black transition-colors">
-                        Reply
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                
-                <button className="font-[family-name:var(--font-figtree)] font-semibold text-[14px] text-[var(--body,#5a5a5a)] mt-[8px] hover:text-[#f95c4b] transition-colors">
-                  Hide replies
-                </button>
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {/* Load More Trigger */}
-        <div className="flex flex-col items-center justify-center w-full mt-[8px]">
-          <div className="bg-transparent rounded-[6px] flex items-center justify-center transition-colors">
-            <button className="font-[family-name:var(--font-figtree)] font-medium text-[13px] leading-[18.3px] tracking-[0.26px] text-[var(--sub-head,#3a3a3a)] underline hover:text-[#f95c4b] transition-colors">
-              Load More
-            </button>
-          </div>
-        </div>
+          ))
+        )}
       </div>
 
-      {/* Input Area */}
-      <div className="flex gap-[12px] items-center w-full mt-[16px]">
-        <div className="bg-[#fcfaf7] border border-[var(--alt-sec,#e4ded2)] rounded-[32px] shadow-sm flex-1 h-[40px] flex items-center px-[16px] py-[12px] gap-[12px] focus-within:border-[#a0a0a0] transition-colors">
-          <button className="hover:opacity-70 transition-opacity flex items-center justify-center">
-            <Smile className="size-[24px] text-black" />
-          </button>
-          <input 
-            type="text" 
-            placeholder="Join the conversation ..."
-            className="flex-1 bg-transparent border-none outline-none font-[family-name:var(--font-figtree)] font-medium text-[16px] leading-[25.8px] tracking-[0.32px] text-[#1a1a1a] placeholder:text-[var(--place-holder,#9a9a9a)] overflow-hidden text-ellipsis whitespace-nowrap"
+      {/* Chat input */}
+      {!streamEnded ? (
+        <div className="bg-white border border-slate-200/80 rounded-full p-3 pl-6 flex items-center gap-4 shadow-lg">
+          <Smile className="w-5 h-5 text-slate-400 cursor-pointer hover:text-rose-500 transition-colors shrink-0" />
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            placeholder="Send a message..."
+            className="flex-1 bg-transparent text-sm font-bold text-[#111827] outline-none placeholder:text-slate-400"
           />
-        </div>
-        
-        <button className="bg-[var(--cta,#f95c4b)] border border-[var(--alt-sec,#e4ded2)] hover:bg-[#e05243] shadow-sm transition-colors rounded-[32px] h-[40px] px-[16px] py-[12px] flex items-center justify-center">
-          <span className="font-[family-name:var(--font-figtree)] font-bold text-[16px] leading-[25.8px] tracking-[0.32px] text-white">
+          <button
+            onClick={handleSend}
+            disabled={!input.trim()}
+            className="bg-[#f87171] hover:bg-[#ef4444] disabled:bg-slate-200 disabled:text-slate-400 text-white px-6 py-2.5 rounded-full text-sm font-black shadow-md transition-all active:scale-95 shrink-0 flex items-center gap-2"
+          >
+            <Send className="w-4 h-4" />
             Send
-          </span>
-        </button>
-      </div>
-
+          </button>
+        </div>
+      ) : (
+        <div className="bg-slate-100 rounded-full p-4 text-center">
+          <p className="text-slate-500 font-bold text-sm">Chat is closed — this stream has ended.</p>
+        </div>
+      )}
     </div>
-  );
+  )
 }

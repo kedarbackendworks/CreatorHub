@@ -34,7 +34,7 @@ export default function PostHeroImage({
 
     return (
       <Image 
-        src={thumbnailUrl || mediaUrl || "/assets/creator/post1.png"} 
+        src={thumbnailUrl || mediaUrl || "/assets/creator/thumbnail.png"} 
         alt="Post Cover Image" 
         fill 
         className={`object-cover transition-all duration-500 ${isLocked ? 'blur-[12px] scale-105 opacity-60' : 'opacity-80'}`} 

@@ -8,8 +8,37 @@ const bcrypt = require('bcryptjs');
 // @desc    Register new user
 // @route   POST /api/auth/register
 // @access  Public
+// Helper: Generate 6-digit OTP
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Helper: Send OTP email
+const sendOtpEmail = async (email, otp) => {
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT) || 587,
+    secure: Number(process.env.SMTP_PORT) === 465,
+    auth:
+      process.env.SMTP_USER && process.env.SMTP_PASS
+        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+        : undefined,
+  });
+
+  await transporter.sendMail({
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || 'no-reply@logoipsum.app',
+    to: email,
+    subject: 'Your Logoipsum Verification Code',
+    text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
+    html: `<div style="font-family:sans-serif;max-width:420px;margin:0 auto;padding:32px;">
+      <h2 style="color:#1a1a1a;">Verify your email</h2>
+      <p style="color:#5a5a5a;">Your verification code is:</p>
+      <div style="font-size:36px;font-weight:bold;letter-spacing:8px;color:#e14517;margin:24px 0;">${otp}</div>
+      <p style="color:#9a9a9a;font-size:14px;">This code expires in 5 minutes.</p>
+    </div>`,
+  });
+};
+
 const registerUser = async (req, res) => {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, username, phone } = req.body;
 
   try {
     const userExists = await User.findOne({ email });
@@ -18,31 +47,32 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
+    // Generate OTP
+    const otp = generateOtp();
+
     const user = await User.create({
       name,
+      username: username || name.toLowerCase().replace(/\s+/g, ''),
+      phone: phone || '',
       email,
       password,
       role: role || 'user',
+      otp,
+      otpExpires: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
     });
 
     if (user) {
-        // If they are a creator, create a basic creator profile too
-        if (user.role === 'creator') {
-            await Creator.create({ 
-                userId: user._id.toString(), 
-                name: user.name, 
-                username: user.name.toLowerCase().replace(' ', '') 
-            });
-        }
+      // Send OTP email
+      try {
+        await sendOtpEmail(email, otp);
+      } catch (emailErr) {
+        console.error('OTP email failed:', emailErr.message);
+        // Don't fail registration if email fails — user can resend
+      }
 
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        avatar: user.avatar,
-        countryOfResidence: user.countryOfResidence,
-        token: generateToken(user._id),
+        success: true,
+        message: 'Account created. Check your email for verification code.',
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -203,6 +233,151 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Request OTP (resend)
+// @route   POST /api/auth/request-otp
+// @access  Public
+const requestOtp = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      return res.json({ success: true, message: 'Email already verified' });
+    }
+
+    const otp = generateOtp();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save({ validateBeforeSave: false });
+
+    try {
+      await sendOtpEmail(email, otp);
+    } catch (emailErr) {
+      console.error('OTP email failed:', emailErr.message);
+      return res.status(500).json({ message: 'Failed to send OTP email' });
+    }
+
+    res.json({ success: true, message: 'OTP sent to your email' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Verify OTP
+// @route   POST /api/auth/verify-otp
+// @access  Public
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check OTP
+    if (!user.otp || user.otp !== otp) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // Check expiry
+    if (user.otpExpires && user.otpExpires < new Date()) {
+      return res.status(400).json({ message: 'OTP has expired. Please request a new one.' });
+    }
+
+    // Mark as verified, clear OTP fields
+    user.isVerified = true;
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    // If creator, create creator profile
+    if (user.role === 'creator') {
+      const existingCreator = await Creator.findOne({ userId: user._id.toString() });
+      if (!existingCreator) {
+        await Creator.create({
+          userId: user._id.toString(),
+          name: user.name,
+          username: user.name.toLowerCase().replace(/\s+/g, ''),
+        });
+      }
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      message: 'Email verified successfully',
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        countryOfResidence: user.countryOfResidence,
+        token,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Set user role (after verification)
+// @route   PATCH /api/auth/set-role
+// @access  Private
+const setRole = async (req, res) => {
+  const { role } = req.body;
+
+  if (!['user', 'creator'].includes(role)) {
+    return res.status(400).json({ message: 'Invalid role. Must be user or creator.' });
+  }
+
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.role = role;
+    await user.save({ validateBeforeSave: false });
+
+    // If creator, create creator profile
+    if (role === 'creator') {
+      const existingCreator = await Creator.findOne({ userId: user._id.toString() });
+      if (!existingCreator) {
+        await Creator.create({
+          userId: user._id.toString(),
+          name: user.name,
+          username: user.username || user.name.toLowerCase().replace(/\s+/g, ''),
+        });
+      }
+    }
+
+    const token = generateToken(user._id);
+
+    res.json({
+      success: true,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        countryOfResidence: user.countryOfResidence,
+        token,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -210,4 +385,7 @@ module.exports = {
   getConversationKey,
   forgotPassword,
   resetPassword,
+  requestOtp,
+  verifyOtp,
+  setRole,
 };

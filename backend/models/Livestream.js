@@ -8,6 +8,11 @@ const livestreamSchema = new mongoose.Schema({
   scheduledTime: { type: Date, default: Date.now },
   status: { type: String, enum: ['scheduled', 'live', 'ended'], default: 'scheduled' },
   creatorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Creator', required: true },
+  startedAt: { type: Date },
+  endedAt: { type: Date },
+  duration: { type: Number, default: 0 },
+  peakViewers: { type: Number, default: 0 },
+  recordingUrl: { type: String, default: '' },
   settings: {
     displayChat: { type: Boolean, default: true },
     notificationsEnabled: { type: Boolean, default: true },

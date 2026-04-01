@@ -63,7 +63,7 @@ export default function CreatorHomePage() {
        formData.append('username', profileForm.username);
        formData.append('bio', profileForm.bio);
        if (avatarFile) {
-         formData.append('file', avatarFile);
+         formData.append('avatar', avatarFile);
        }
 
        const res = await api.put('/creator/update-profile', formData, {

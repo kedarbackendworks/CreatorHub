@@ -26,7 +26,7 @@ function SignUpForm() {
     setLoading(true);
     try {
       // Pass the role from searchParams if needed, or handle it in role selection later
-      const res = await api.post('/auth/register', { name, username, phone, email, password });
+      const res = await api.post('/auth/register', { name, username, phone, email, password, role });
       if (res.data.success) {
         toast.success("Account created! Check your email for OTP.");
         // Redirect to verify-email page with the email

@@ -10,12 +10,14 @@ import ProfileActions from '@/src/components/CreatorProfile/ProfileActions';
 import ConnectedLinks from '@/src/components/CreatorProfile/ConnectedLinks';
 import ContentTabs from '@/src/components/CreatorProfile/ContentTabs';
 import ProfileContentFeed from '@/src/components/CreatorProfile/ProfileContentFeed';
+import LivestreamFeed from '@/src/components/CreatorProfile/LivestreamFeed';
 import api from '@/src/lib/api';
 
 export default function CreatorProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [creator, setCreator] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('posts');
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -63,7 +65,7 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="flex flex-col gap-[24px] items-start w-full mt-[24px]">
-                <ContentTabs creatorId={id as string} contentCounts={creator.contentCounts} />
+                <ContentTabs creatorId={id as string} />
                 <ProfileContentFeed creatorId={creator._id} />
               </div>
             </div>
@@ -73,3 +75,4 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
     </div>
   );
 }
+

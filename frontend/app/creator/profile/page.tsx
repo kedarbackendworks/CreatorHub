@@ -16,9 +16,17 @@ export default function CreatorProfilePage() {
   // Edit Form State
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
+  const [category, setCategory] = useState('');
+  const [instagram, setInstagram] = useState('');
+  const [twitter, setTwitter] = useState('');
+  const [facebook, setFacebook] = useState('');
+  const [tiktok, setTiktok] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState('');
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [bannerPreview, setBannerPreview] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,7 +39,13 @@ export default function CreatorProfilePage() {
         setPosts(postRes.data);
         setName(dashRes.data.creator.name);
         setBio(dashRes.data.creator.bio || '');
+        setCategory(dashRes.data.creator.category || 'Content Creator');
+        setInstagram(dashRes.data.creator.socialLinks?.instagram || '');
+        setTwitter(dashRes.data.creator.socialLinks?.twitter || '');
+        setFacebook(dashRes.data.creator.socialLinks?.facebook || '');
+        setTiktok(dashRes.data.creator.socialLinks?.tiktok || '');
         setAvatarPreview(dashRes.data.creator.avatar);
+        setBannerPreview(dashRes.data.creator.banner || '');
       } catch (err) {
         console.error("Error fetching profile:", err);
         // toast.error("Failed to load profile data");
@@ -42,11 +56,16 @@ export default function CreatorProfilePage() {
     fetchProfile();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setAvatarFile(file);
-      setAvatarPreview(URL.createObjectURL(file));
+      if (type === 'avatar') {
+        setAvatarFile(file);
+        setAvatarPreview(URL.createObjectURL(file));
+      } else {
+        setBannerFile(file);
+        setBannerPreview(URL.createObjectURL(file));
+      }
     }
   };
 
@@ -57,8 +76,16 @@ export default function CreatorProfilePage() {
       const formData = new FormData();
       formData.append('name', name);
       formData.append('bio', bio);
+      formData.append('category', category);
+      formData.append('instagram', instagram);
+      formData.append('twitter', twitter);
+      formData.append('facebook', facebook);
+      formData.append('tiktok', tiktok);
       if (avatarFile) {
-        formData.append('file', avatarFile);
+        formData.append('avatar', avatarFile);
+      }
+      if (bannerFile) {
+        formData.append('banner', bannerFile);
       }
 
       const res = await api.put('/creator/update-profile', formData, {
@@ -114,7 +141,10 @@ export default function CreatorProfilePage() {
                         )}
                      </div>
                      <div className="pb-4">
-                        <h1 className="text-[44px] font-black text-[#1c1917] tracking-tight leading-tight font-['Fjalla_One'] uppercase">{creator?.name}</h1>
+                        <div className="flex items-center gap-3 mb-1">
+                           <h1 className="text-[44px] font-black text-[#1c1917] tracking-tight leading-tight font-['Fjalla_One'] uppercase">{creator?.name}</h1>
+                           <span className="px-3 py-1 bg-rose-50 border border-rose-100 rounded-full text-[10px] font-black text-rose-500 uppercase tracking-widest mt-1">{creator?.category || 'Creator'}</span>
+                        </div>
                         <p className="text-[17px] font-bold text-slate-500 mt-1 max-w-sm">{creator?.bio || 'No bio available'}</p>
 
                         <div className="flex items-center gap-10 mt-8 font-['Fjalla_One']">
@@ -181,38 +211,72 @@ export default function CreatorProfilePage() {
                   ))}
                </div>
 
-               {/* Post Grid */}
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {posts.length > 0 ? posts.map((post, i) => (
-                    <div key={post._id} className="group cursor-pointer">
-                       <div className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100/50">
-                          <div className="relative aspect-square">
-                             <img src={post.thumbnailUrl || post.mediaUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
-                             <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
-                             {post.isExclusive && (
-                               <div className="absolute left-4 top-4 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full flex items-center gap-2 text-white text-[11px] font-black tracking-widest border border-white/20">
-                                  <Lock className="w-3 h-3" /> Exclusive
-                               </div>
-                             )}
-                          </div>
-                          <div className="p-6">
-                             <h3 className="text-[15px] font-bold text-[#1c1917] mb-2 leading-tight group-hover:text-rose-500 transition-colors font-['Fjalla_One'] uppercase">{post.title}</h3>
-                             <div className="flex items-center justify-between mt-4">
-                                <p className="text-[12px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(post.createdAt).toLocaleDateString()}</p>
-                                <div className="flex items-center gap-4 text-slate-400">
-                                   <div className="flex items-center gap-1.5"><Heart className="w-4 h-4" /> <span className="text-[12px] font-bold tracking-tighter">{post.likes || 0}</span></div>
-                                   <div className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4" /> <span className="text-[12px] font-bold tracking-tighter">{post.comments || 0}</span></div>
+               {/* Content Rendering based on Active Tab */}
+               {activeTab === 'About' ? (
+                 <div className="space-y-6">
+                   <div className="bg-white border border-slate-100 rounded-[32px] p-10 shadow-sm">
+                      <h3 className="text-[20px] font-black text-[#1c1917] mb-6 font-['Fjalla_One'] uppercase tracking-tight">Bio</h3>
+                      <p className="text-[16px] leading-[1.6] text-slate-600 font-medium">
+                        {creator?.bio || "No biography provided yet. Add one in the profile settings."}
+                      </p>
+                   </div>
+
+                   <div className="bg-white border border-slate-100 rounded-[32px] p-10 shadow-sm">
+                      <h3 className="text-[20px] font-black text-[#1c1917] mb-6 font-['Fjalla_One'] uppercase tracking-tight">Expertise</h3>
+                      <div className="flex flex-wrap gap-3">
+                         {(creator?.category || 'General Content').split(',').map((cat: string, i: number) => (
+                           <span key={i} className="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-bold text-slate-600">
+                             {cat.trim()}
+                           </span>
+                         ))}
+                      </div>
+                   </div>
+                 </div>
+               ) : (
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {posts.filter((p: any) => {
+                       if (activeTab === 'Videos') return p.mediaType === 'video';
+                       if (activeTab === 'Livestreams') return p.mediaType === 'livestream';
+                       return true;
+                    }).length > 0 ? posts.filter((p: any) => {
+                       if (activeTab === 'Videos') return p.mediaType === 'video';
+                       if (activeTab === 'Livestreams') return p.mediaType === 'livestream';
+                       return true;
+                    }).map((post, i) => (
+                       <div key={post._id} className="group cursor-pointer">
+                          <div className="bg-white rounded-[32px] overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-100/50">
+                             <div className="relative aspect-square flex items-center justify-center bg-slate-50">
+                                {post.mediaType === 'file' ? (
+                                  <div className="text-8xl select-none">📄</div>
+                                ) : (
+                                  <img src={post.thumbnailUrl || post.mediaUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt={post.title} />
+                                )}
+                                <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
+                                {post.isExclusive && (
+                                  <div className="absolute left-4 top-4 bg-black/40 backdrop-blur-xl px-4 py-1.5 rounded-full flex items-center gap-2 text-white text-[11px] font-black tracking-widest border border-white/20">
+                                     <Lock className="w-3 h-3" /> Exclusive
+                                  </div>
+                                )}
+                             </div>
+                             <div className="p-6">
+                                <h3 className="text-[15px] font-bold text-[#1c1917] mb-2 leading-tight group-hover:text-rose-500 transition-colors font-['Fjalla_One'] uppercase">{post.title}</h3>
+                                <div className="flex items-center justify-between mt-4">
+                                   <p className="text-[12px] font-bold text-slate-400 uppercase tracking-tighter">{new Date(post.createdAt).toLocaleDateString()}</p>
+                                   <div className="flex items-center gap-4 text-slate-400">
+                                      <div className="flex items-center gap-1.5"><Heart className="w-4 h-4" /> <span className="text-[12px] font-bold tracking-tighter">{post.likes || 0}</span></div>
+                                      <div className="flex items-center gap-1.5"><MessageSquare className="w-4 h-4" /> <span className="text-[12px] font-bold tracking-tighter">{post.comments || 0}</span></div>
+                                   </div>
                                 </div>
                              </div>
                           </div>
                        </div>
-                    </div>
-                  )) : (
-                    <div className="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-[40px]">
-                       <p className="text-lg font-bold">No posts published yet.</p>
-                    </div>
-                  )}
-               </div>
+                    )) : (
+                       <div className="col-span-full py-20 text-center text-slate-400 border-2 border-dashed border-slate-200 rounded-[40px]">
+                          <p className="text-lg font-bold">No {activeTab.toLowerCase()} published yet.</p>
+                       </div>
+                    )}
+                 </div>
+               )}
             </div>
 
          </div>
@@ -250,13 +314,40 @@ export default function CreatorProfilePage() {
                          ref={fileInputRef} 
                          className="hidden" 
                          accept="image/*" 
-                         onChange={handleFileChange} 
+                         onChange={(e) => handleFileChange(e, 'avatar')} 
                        />
                     </div>
                     <p className="text-xs font-bold text-slate-400">Click to update profile picture</p>
                  </div>
 
-                 <div className="space-y-4">
+                 <div className="mb-6">
+                    <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1 font-['Fjalla_One']">Cover Image</label>
+                    <div className="relative h-32 rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 group">
+                       {bannerPreview ? (
+                         <img src={bannerPreview} className="w-full h-full object-cover" alt="Banner preview" />
+                       ) : (
+                         <div className="w-full h-full flex items-center justify-center text-slate-300 italic text-sm">No cover image set</div>
+                       )}
+                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button 
+                           type="button"
+                           onClick={() => bannerInputRef.current?.click()}
+                           className="px-6 py-2.5 bg-white/95 backdrop-blur-md rounded-full text-xs font-black text-slate-900 uppercase tracking-widest shadow-xl border border-slate-200 hover:scale-105 active:scale-95 transition-all"
+                         >
+                           Change Cover
+                         </button>
+                       </div>
+                       <input 
+                         type="file" 
+                         ref={bannerInputRef} 
+                         className="hidden" 
+                         accept="image/*" 
+                         onChange={(e) => handleFileChange(e, 'banner')} 
+                       />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
                     <div>
                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Full Name</label>
                        <input 
@@ -267,13 +358,45 @@ export default function CreatorProfilePage() {
                        />
                     </div>
                     <div>
+                       <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Creator Category</label>
+                       <input 
+                         type="text" 
+                         placeholder="e.g. Digital Artist, Fitness Influencer"
+                         value={category}
+                         onChange={(e) => setCategory(e.target.value)}
+                         className="w-full bg-[#f9f9f9] border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all font-sans" 
+                       />
+                    </div>
+                    <div>
                        <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Bio</label>
                        <textarea 
                          value={bio}
                          onChange={(e) => setBio(e.target.value)}
-                         rows={4}
+                         rows={2}
                          className="w-full bg-[#f9f9f9] border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all resize-none font-sans" 
                        />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                       <div>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Instagram</label>
+                          <input 
+                             type="text" 
+                             value={instagram}
+                             onChange={(e) => setInstagram(e.target.value)}
+                             placeholder="@username"
+                             className="w-full bg-[#f9f9f9] border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all font-sans" 
+                          />
+                       </div>
+                       <div>
+                          <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Twitter</label>
+                          <input 
+                             type="text" 
+                             value={twitter}
+                             onChange={(e) => setTwitter(e.target.value)}
+                             placeholder="@username"
+                             className="w-full bg-[#f9f9f9] border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-bold text-[#1c1917] focus:outline-none focus:ring-2 focus:ring-rose-200 transition-all font-sans" 
+                          />
+                       </div>
                     </div>
                  </div>
 
