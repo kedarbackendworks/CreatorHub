@@ -12,9 +12,12 @@ type SuccessPageProps = {
 
 export default async function AddCreditsSuccessPage({ searchParams }: SuccessPageProps) {
   const params = await searchParams;
-  const amount = Number(params.amount || 80);
-  const tax = Number(params.tax || 2);
-  const total = Number(params.total || amount + tax);
+  const rawAmount = Number(params.amount);
+  const amount = Number.isFinite(rawAmount) ? rawAmount : 80;
+  const rawTax = Number(params.tax);
+  const tax = Number.isFinite(rawTax) ? rawTax : 2;
+  const rawTotal = Number(params.total);
+  const total = Number.isFinite(rawTotal) ? rawTotal : amount + tax;
 
   const formatMoney = (value: number) => `$ ${Number.isFinite(value) ? value : 0}`;
 
