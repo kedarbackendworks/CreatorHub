@@ -43,7 +43,11 @@ export default function LibraryCard({ post }: { post: Post }) {
   };
 
   return (
-    <div className="bg-[#fcfaf7] border-[0.5px] border-[#e4ded2] flex flex-col gap-[12px] p-[12px] rounded-[12px] shadow-[0px_4px_4px_0px_rgba(228,222,210,0.25)] w-full hover:shadow-md transition-shadow">
+    <Link
+      href={`/user/posts/${post._id}`}
+      className="block bg-[#fcfaf7] border-[0.5px] border-[#e4ded2] rounded-[12px] shadow-[0px_4px_4px_0px_rgba(228,222,210,0.25)] w-full hover:shadow-md transition-shadow"
+    >
+      <div className="flex flex-col gap-[12px] p-[12px]">
       
       {/* Header */}
       <div className="flex items-start gap-[12px] w-full">
@@ -75,8 +79,7 @@ export default function LibraryCard({ post }: { post: Post }) {
         </div>
       </div>
 
-      {/* Image with Link */}
-      <Link href={`/user/posts/${post._id}`} className="block w-full">
+      {/* Image */}
         <div className="flex flex-col h-[200px] justify-end p-[12px] relative rounded-[12px] overflow-hidden w-full cursor-pointer group">
           <Image src={getThumbnailSrc()} alt={post.title} fill className="object-cover transition-transform group-hover:scale-105" />
           {post.isExclusive && (
@@ -88,7 +91,6 @@ export default function LibraryCard({ post }: { post: Post }) {
             </div>
           )}
         </div>
-      </Link>
 
       {/* Details Footer */}
       <div className="flex flex-col gap-[8px] w-full">
@@ -115,7 +117,7 @@ export default function LibraryCard({ post }: { post: Post }) {
           </div>
         </div>
       </div>
-
-    </div>
+      </div>
+    </Link>
   );
 }
