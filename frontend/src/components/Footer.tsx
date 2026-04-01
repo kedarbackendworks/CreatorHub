@@ -11,6 +11,7 @@ export default function Footer() {
     pathname?.startsWith('/role-selection') ||
     pathname?.startsWith('/explore-as-fan') ||
     pathname?.startsWith('/user') ||
+    pathname?.startsWith('/creator') ||
     pathname?.startsWith('/livestream') ||
     pathname?.startsWith('/login') ||
     pathname?.startsWith('/signup') ||
@@ -18,6 +19,7 @@ export default function Footer() {
   ) {
     return null;
   }
+
 
   return (
     <footer className="w-full bg-[#f9fafb]">

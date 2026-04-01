@@ -1,48 +1,132 @@
-'use client';
+"use client"
 
-import React, { use } from 'react';
-import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
-import DashboardSidebar from '@/src/components/UserDashboard/DashboardSidebar';
-import LivestreamPlayer from '@/src/components/CreatorProfile/LivestreamPlayer';
-import CreatorHeader from '@/src/components/CreatorProfile/CreatorHeader';
-import LivestreamComments from '@/src/components/CreatorProfile/LivestreamComments';
+import React, { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft } from 'lucide-react'
+import { useSocket } from '@/src/hooks/useSocket'
+import { useViewer } from '@/src/hooks/useWebRTC'
+import { useLiveChat } from '@/src/hooks/useLiveChat'
+import { useAuthStore } from '@/src/store/useAuthStore'
+import LivestreamPlayer from '@/src/components/CreatorProfile/LivestreamPlayer'
+import LivestreamComments from '@/src/components/CreatorProfile/LivestreamComments'
+import api from '@/src/lib/api'
 
-export default function LivestreamPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+interface StreamData {
+  _id: string
+  title: string
+  description: string
+  thumbnail: string
+  status: string
+  creatorId: {
+    _id: string
+    name: string
+    avatarUrl: string
+  } | null
+}
+
+export default function LivestreamViewerPage() {
+  const router = useRouter()
+  const params = useParams()
+  const streamId = params?.id as string
+  const user = useAuthStore((s) => s.user)
+
+  const [stream, setStream] = useState<StreamData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const { socket, isConnected } = useSocket(streamId)
+  const { remoteStream, connectionState, viewerCount, streamEnded } = useViewer(socket, streamId, user)
+  const { messages, sendMessage } = useLiveChat(socket, streamId, user)
+
+  // Fetch stream details
+  useEffect(() => {
+    if (!streamId) return
+    const fetchStream = async () => {
+      try {
+        const res = await api.get(`/livestream/${streamId}`)
+        setStream(res.data)
+        if (res.data.status === 'ended') {
+          setError('This stream has ended.')
+        }
+      } catch {
+        setError('Stream not found.')
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStream()
+  }, [streamId])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#f9f9f9]">
+        <div className="w-12 h-12 border-4 border-slate-200 border-t-rose-500 rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (error && !stream) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f9f9f9] gap-4">
+        <p className="text-lg font-bold text-slate-500">{error}</p>
+        <button
+          onClick={() => router.back()}
+          className="text-rose-500 font-bold text-sm hover:underline"
+        >
+          Go Back
+        </button>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-[var(--bg,#f6f4f1)] flex relative overflow-x-hidden">
-      <DashboardSidebar />
-      
-      {/* Main Content Area - Padded left to account for sidebar */}
-      <main className="flex-1 ml-[240px] pl-[42px] pr-[42px] pt-[42px] pb-[60px] flex flex-col items-start min-h-screen relative">
+    <div className="bg-[#f9f9f9] min-h-screen font-sans">
+      <div className="max-w-5xl mx-auto p-8 space-y-8">
         
-        {/* Back Button positioned absolute top-left */}
-        <div className="absolute top-[42px] left-[42px]">
-          <Link href={`/user/creators/${id}`} className="flex items-center gap-[4px] px-[8px] py-[4px] border border-[var(--input-field-border,#d8d1c7)] rounded-[36px] bg-[var(--bg-2,#faf8f5)] hover:bg-[#f0f0f0] transition-colors shadow-sm">
-            <ChevronLeft className="size-[20px] text-[var(--heading,#1a1a1a)]" />
-            <span className="font-[family-name:var(--font-figtree)] font-medium text-[16px] leading-[25.8px] tracking-[0.32px] text-[var(--heading,#1a1a1a)] pr-2">
-              Back
-            </span>
-          </Link>
-        </div>
+        {/* Back button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-[#1c1917] text-sm font-bold border border-slate-200 rounded-full px-4 py-2 hover:bg-white transition-all"
+        >
+          <ArrowLeft className="w-4 h-4" /> Back
+        </button>
 
-        {/* Livestream Content Container */}
-        <div className="w-full flex flex-col items-start mt-[76px] pb-[42px] max-w-[1116px]">
-          
-          {/* Main Stream Title */}
-          <h1 className="font-[family-name:var(--font-fjalla)] font-normal text-[40px] leading-[57.6px] tracking-[0.8px] text-[var(--heading,#1a1a1a)] mb-[24px]">
-            Transform your body in just 30 days with simple home workouts and a guided nutrition plan.
-          </h1>
+        {/* Title */}
+        <h1 className="text-3xl font-black text-[#1c1917] tracking-tight leading-tight">
+          {stream?.title || 'Untitled Livestream'}
+        </h1>
 
-          {/* Sub components stacked linearly */}
-          <LivestreamPlayer />
-          <CreatorHeader />
-          <LivestreamComments />
+        {/* Connection status */}
+        {!isConnected && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-800 text-sm font-medium text-center">
+            Connecting to streaming server...
+          </div>
+        )}
 
-        </div>
-      </main>
+        {/* Video Player */}
+        <LivestreamPlayer
+          remoteStream={remoteStream}
+          viewerCount={viewerCount}
+          connectionState={connectionState}
+          streamEnded={streamEnded || stream?.status === 'ended'}
+          title={stream?.title}
+        />
+
+        {/* Description */}
+        {stream?.description && (
+          <div className="bg-white rounded-2xl border border-slate-200/60 p-6 shadow-sm">
+            <p className="text-sm font-medium text-slate-600 leading-relaxed">{stream.description}</p>
+          </div>
+        )}
+
+        {/* Live Chat */}
+        <LivestreamComments
+          messages={messages}
+          onSendMessage={sendMessage}
+          streamEnded={streamEnded || stream?.status === 'ended'}
+        />
+
+      </div>
     </div>
-  );
+  )
 }

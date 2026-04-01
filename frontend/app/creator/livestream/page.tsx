@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from 'react';
-import { Video, X, Camera, Mic, MicOff, CameraOff, Clock, User, Shield, Image as ImageIcon, MessageSquare, Bell, ShieldCheck, ChevronDown, Check, Upload } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Video, Camera, Mic, MicOff, CameraOff, User, Shield, MessageSquare, Bell, ShieldCheck, Upload } from 'lucide-react';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -16,6 +16,42 @@ export default function CreateLivestreamPage() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+
+  // Camera preview
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [cameraAllowed, setCameraAllowed] = useState(false);
+  const [cameraError, setCameraError] = useState(false);
+
+  // Start camera preview on mount
+  useEffect(() => {
+    let stream: MediaStream | null = null;
+    const startCamera = async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        setCameraStream(stream);
+        setCameraAllowed(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch {
+        setCameraError(true);
+        setCameraAllowed(false);
+      }
+    };
+    startCamera();
+
+    return () => {
+      stream?.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+
+  // Bind stream to video element
+  useEffect(() => {
+    if (videoRef.current && cameraStream) {
+      videoRef.current.srcObject = cameraStream;
+    }
+  }, [cameraStream]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -34,17 +70,28 @@ export default function CreateLivestreamPage() {
       formData.append('title', title);
       formData.append('description', description);
       formData.append('audience', audience);
+      formData.append('status', activeTab === 'Go live now' ? 'live' : 'scheduled');
       formData.append('scheduledTime', activeTab === 'Go live now' ? new Date().toISOString() : new Date(Date.now() + 86400000).toISOString());
       if (file) formData.append('file', file);
 
-      await api.post('/creator/livestreams', formData, {
+      const res = await api.post('/creator/livestreams', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
+      // Stop camera preview before navigating
+      cameraStream?.getTracks().forEach(t => t.stop());
+
       toast.success("Livestream created!");
-      router.push('/creator');
-    } catch (err) {
-      toast.error("Failed to start live.");
+
+      if (activeTab === 'Go live now') {
+        // Navigate to the active broadcast page
+        router.push(`/creator/livestream/active?streamId=${res.data._id}&title=${encodeURIComponent(title)}`);
+      } else {
+        router.push('/creator');
+      }
+    } catch (err: any) {
+      console.error("Livestream creation error:", err?.response?.data || err?.message || err);
+      toast.error(err?.response?.data?.error || "Failed to start live.");
     } finally {
       setPublishing(false);
     }
@@ -53,7 +100,7 @@ export default function CreateLivestreamPage() {
   return (
     <div className="flex bg-[#f9f9f9] min-h-screen font-sans">
       
-      {/* Left Column: Preview */}
+      {/* Left Column: Camera Preview */}
       <div className="flex-1 p-12 max-w-5xl border-r border-slate-200/60 overflow-y-auto">
          <header className="mb-12">
             <h1 className="text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Create a livestream</h1>
@@ -62,27 +109,49 @@ export default function CreateLivestreamPage() {
             </p>
          </header>
 
-         {/* Stream Preview Container */}
+         {/* Camera Preview Container */}
          <div className="space-y-12">
-            <div className="bg-[#a8a29e] rounded-[32px] overflow-hidden shadow-2xl aspect-[16/9] relative flex flex-col items-center justify-center p-12 text-center text-white/80 group">
-               <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-6">
-                  <CameraOff className="w-8 h-8 text-white" />
-               </div>
-               <p className="text-lg font-bold text-white mb-2 leading-relaxed max-w-sm">
-                  Allow renown to access your camera and microphone
-               </p>
-               <p className="text-sm font-medium text-white/60 leading-relaxed max-w-xs">
-                  Go to your browser settings to change your permissions.
-               </p>
+            <div className="bg-[#1a1a1a] rounded-[32px] overflow-hidden shadow-2xl aspect-[16/9] relative flex flex-col items-center justify-center text-white/80 group">
+               {cameraAllowed ? (
+                 <video
+                   ref={videoRef}
+                   autoPlay
+                   playsInline
+                   muted
+                   className="absolute inset-0 w-full h-full object-cover mirror"
+                   style={{ transform: 'scaleX(-1)' }}
+                 />
+               ) : (
+                 <>
+                   <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mb-6">
+                      <CameraOff className="w-8 h-8 text-white" />
+                   </div>
+                   <p className="text-lg font-bold text-white mb-2 leading-relaxed max-w-sm text-center">
+                      {cameraError ? 'Camera access denied' : 'Requesting camera access...'}
+                   </p>
+                   <p className="text-sm font-medium text-white/60 leading-relaxed max-w-xs text-center">
+                      {cameraError ? 'Go to your browser settings to allow camera permissions.' : 'Please allow camera access when prompted.'}
+                   </p>
+                 </>
+               )}
                
-               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4">
-                  <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-xl hover:scale-105 active:scale-95 transition-all">
-                    <CameraOff className="w-5 h-5" />
+               {/* Camera/Mic control buttons */}
+               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 z-10">
+                  <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#1c1917] shadow-xl hover:scale-105 active:scale-95 transition-all">
+                    <Camera className="w-5 h-5" />
                   </button>
-                  <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-xl hover:scale-105 active:scale-95 transition-all">
-                    <MicOff className="w-5 h-5" />
+                  <button className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#1c1917] shadow-xl hover:scale-105 active:scale-95 transition-all">
+                    <Mic className="w-5 h-5" />
                   </button>
                </div>
+
+               {/* Live preview badge */}
+               {cameraAllowed && (
+                 <div className="absolute top-6 right-6 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5">
+                   <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                   Preview
+                 </div>
+               )}
             </div>
          </div>
       </div>
@@ -95,7 +164,7 @@ export default function CreateLivestreamPage() {
            disabled={publishing}
            className="w-full py-4.5 bg-[#f87171] hover:bg-[#ef4444] text-white text-base font-black rounded-2xl shadow-xl transition-all mb-10 border-b-4 border-[#dc2626] disabled:opacity-50"
          >
-            {publishing ? 'Starting...' : 'Start Live'}
+            {publishing ? 'Starting...' : activeTab === 'Go live now' ? '🔴 Go Live Now' : 'Schedule Stream'}
          </button>
 
          <div className="space-y-10 pb-20">

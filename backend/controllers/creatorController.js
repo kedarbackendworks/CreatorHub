@@ -604,7 +604,7 @@ const createLivestream = async (req, res) => {
             let creator = await Creator.findOne({ userId: req.user._id.toString() });
             if (!creator) return res.status(404).json({ error: 'Creator profile missing' });
 
-            const { title, description, audience, scheduledTime, settings } = req.body;
+            const { title, description, audience, scheduledTime, settings, status } = req.body;
             let thumbnail = '';
 
             if (req.file) {
@@ -630,6 +630,8 @@ const createLivestream = async (req, res) => {
                 thumbnail: thumbnail || 'https://via.placeholder.com/600x400',
                 audience,
                 scheduledTime,
+                status: status || 'scheduled',
+                startedAt: status === 'live' ? new Date() : undefined,
                 creatorId: creator._id,
                 settings: settings ? JSON.parse(settings) : { displayChat: true, notificationsEnabled: true, autoModeration: true }
             });

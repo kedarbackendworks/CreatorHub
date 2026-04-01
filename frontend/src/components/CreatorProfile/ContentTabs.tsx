@@ -4,14 +4,22 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-export default function ContentTabs({ defaultTab = 'posts', creatorId: propCreatorId }: { defaultTab?: string, creatorId?: string }) {
+export default function ContentTabs({ 
+  defaultTab = 'posts', 
+  creatorId: propCreatorId,
+  onTabChange,
+}: { 
+  defaultTab?: string;
+  creatorId?: string;
+  onTabChange?: (tabId: string) => void;
+}) {
   const params = useParams();
-  const creatorId = propCreatorId || params?.id || 'default'; // fallback if not in dynamic route
+  const creatorId = propCreatorId || params?.id || 'default';
 
   const TABS = [
     { id: 'posts', label: 'Posts', icon: '/assets/creator/gallery.svg', href: `/user/creators/${creatorId}` },
     { id: 'videos', label: 'Videos', icon: '/assets/creator/video-circle.svg', href: `/user/creators/${creatorId}` },
-    { id: 'livestreams', label: 'Livestreams', icon: '/assets/creator/video.svg', href: `/livestream/${creatorId}` },
+    { id: 'livestreams', label: 'Livestreams', icon: '/assets/creator/video.svg', href: `/user/creators/${creatorId}` },
     { id: 'reviews', label: 'Reviews', icon: '/assets/creator/message.svg', href: `/user/creators/${creatorId}/reviews` },
     { id: 'about', label: 'About', icon: '/assets/creator/info-circle.svg', href: `/user/creators/${creatorId}/about` },
   ];
@@ -20,6 +28,37 @@ export default function ContentTabs({ defaultTab = 'posts', creatorId: propCreat
     <div className="flex gap-[12px] items-center border-b border-[#e4ded2] w-full shrink-0">
       {TABS.map((tab) => {
         const isActive = defaultTab === tab.id;
+
+        // If onTabChange is provided, use client-side tab switching
+        if (onTabChange) {
+          return (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex gap-[8px] items-center justify-center p-[12px] cursor-pointer transition-colors relative 
+                ${isActive ? 'border-b-2 border-[#f95c4b]' : 'border-b-2 border-transparent hover:bg-black/5'}
+              `}
+              style={{ marginBottom: '-1px' }}
+            >
+              <Image 
+                src={tab.icon} 
+                alt={tab.label} 
+                width={20} 
+                height={20} 
+                className={`shrink-0 size-[20px] ${isActive ? '' : 'opacity-70'}`} 
+              />
+              <span 
+                className={`font-['Figtree',sans-serif] font-medium leading-[18.3px] text-[13px] tracking-[0.26px] whitespace-nowrap
+                  ${isActive ? 'text-[#f95c4b]' : 'text-[#3a3a3a]'}
+                `}
+              >
+                {tab.label}
+              </span>
+            </button>
+          );
+        }
+
+        // Default: use Link navigation
         return (
           <Link
             href={tab.href}
@@ -28,7 +67,7 @@ export default function ContentTabs({ defaultTab = 'posts', creatorId: propCreat
             className={`flex gap-[8px] items-center justify-center p-[12px] cursor-pointer transition-colors relative 
               ${isActive ? 'border-b-2 border-[#f95c4b]' : 'border-b-2 border-transparent hover:bg-black/5'}
             `}
-            style={{ marginBottom: '-1px' }} // pull down to overlap the container border
+            style={{ marginBottom: '-1px' }}
           >
             <Image 
               src={tab.icon} 
@@ -50,3 +89,4 @@ export default function ContentTabs({ defaultTab = 'posts', creatorId: propCreat
     </div>
   );
 }
+
