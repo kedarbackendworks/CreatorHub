@@ -21,9 +21,19 @@ api.interceptors.request.use(
   }
 );
 
+// Track consecutive 401s to avoid logging out on transient failures
+let consecutiveAuthFailures = 0;
+let lastAuthFailureTime = 0;
+const AUTH_FAILURE_THRESHOLD = 3;    // require 3 consecutive 401s
+const AUTH_FAILURE_WINDOW_MS = 30000; // within 30 seconds
+
 // Handle invalid/expired token globally for protected endpoints
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Reset counter on any successful response
+    consecutiveAuthFailures = 0;
+    return response;
+  },
   (error) => {
     if (
       typeof window !== 'undefined' &&
@@ -32,10 +42,23 @@ api.interceptors.response.use(
     ) {
       const hasToken = Boolean(localStorage.getItem('token'));
       const requestUrl = error.config?.url || '';
-      const isAuthRequest = requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
+      const isAuthRequest =
+        requestUrl.includes('/auth/login') || requestUrl.includes('/auth/register');
 
       if (hasToken && !isAuthRequest) {
-        useAuthStore.getState().logout();
+        const now = Date.now();
+        // Reset counter if last failure was too long ago
+        if (now - lastAuthFailureTime > AUTH_FAILURE_WINDOW_MS) {
+          consecutiveAuthFailures = 0;
+        }
+        consecutiveAuthFailures += 1;
+        lastAuthFailureTime = now;
+
+        // Only logout after repeated auth failures — not on a single blip
+        if (consecutiveAuthFailures >= AUTH_FAILURE_THRESHOLD) {
+          consecutiveAuthFailures = 0;
+          useAuthStore.getState().logout();
+        }
       }
     }
 

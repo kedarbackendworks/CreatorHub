@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { use } from 'react';
+import { useSearchParams } from 'next/navigation';
 import DashboardSidebar from '@/src/components/UserDashboard/DashboardSidebar';
 import ProfileBanner from '@/src/components/CreatorProfile/ProfileBanner';
 import ProfileHeader from '@/src/components/CreatorProfile/ProfileHeader';
@@ -17,7 +18,9 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
   const { id } = use(params);
   const [creator, setCreator] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('posts');
+  
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'posts';
 
   useEffect(() => {
     const fetchCreator = async () => {
@@ -60,14 +63,21 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
 
             <div className="flex flex-col gap-[24px] items-start w-full mt-[16px]">
               <div className="flex flex-col gap-[24px] shrink-0 w-full max-w-[400px]">
-                <ProfileHeader name={creator.name} bio={creator.bio} category={creator.category} />
+                <ProfileHeader 
+                  name={creator.name} 
+                  bio={creator.bio} 
+                  category={creator.category}
+                  membersCount={creator.membersCount}
+                  postsCount={creator.postsCount}
+                  averageRating={creator.averageRating}
+                />
                 <ConnectedLinks socialLinks={creator.socialLinks} />
               </div>
 
               <div className="flex flex-col gap-[24px] items-start w-full mt-[24px]">
-                <ContentTabs creatorId={id as string} defaultTab={activeTab} onTabChange={setActiveTab} />
+                <ContentTabs creatorId={id as string} defaultTab={currentTab} />
                 
-                {activeTab === 'livestreams' ? (
+                {currentTab === 'livestreams' ? (
                   <LivestreamFeed creatorId={creator._id} />
                 ) : (
                   <ProfileContentFeed creatorId={creator._id} />

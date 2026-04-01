@@ -18,10 +18,20 @@ module.exports = (io) => {
     // ─── Creator creates/starts a stream room ──────────────────────
     socket.on('create_stream', ({ streamId }) => {
       socket.join(`stream:${streamId}`);
-      streams.set(streamId, {
-        creatorSocketId: socket.id,
-        viewers: new Set(),
-      });
+      let stream = streams.get(streamId);
+      if (!stream) {
+        stream = { creatorSocketId: socket.id, viewers: new Map() };
+        streams.set(streamId, stream);
+      } else {
+        stream.creatorSocketId = socket.id;
+        // Notify the creator about viewers who joined BEFORE the stream started
+        for (const [viewerSocketId, viewerInfo] of stream.viewers.entries()) {
+          io.to(socket.id).emit('viewer_joined', {
+            viewerSocketId,
+            ...viewerInfo
+          });
+        }
+      }
       console.log(`[Stream] Created: ${streamId} by ${socket.id}`);
     });
 
@@ -29,21 +39,23 @@ module.exports = (io) => {
     socket.on('join_stream', ({ streamId, userId, userName, avatar }) => {
       socket.join(`stream:${streamId}`);
 
-      const stream = streams.get(streamId);
+      let stream = streams.get(streamId);
       if (!stream) {
-        socket.emit('stream_error', { message: 'Stream not found or has ended' });
-        return;
+         // Create waiting room if creator hasn't started yet
+         stream = { creatorSocketId: null, viewers: new Map() };
+         streams.set(streamId, stream);
       }
 
-      stream.viewers.add(socket.id);
+      const viewerInfo = { userId, userName, avatar };
+      stream.viewers.set(socket.id, viewerInfo);
 
       // Notify the creator about the new viewer so they can create a PeerConnection
-      io.to(stream.creatorSocketId).emit('viewer_joined', {
-        viewerSocketId: socket.id,
-        userId,
-        userName,
-        avatar,
-      });
+      if (stream.creatorSocketId) {
+        io.to(stream.creatorSocketId).emit('viewer_joined', {
+          viewerSocketId: socket.id,
+          ...viewerInfo
+        });
+      }
 
       // Broadcast updated viewer count
       io.to(`stream:${streamId}`).emit('viewer_count', stream.viewers.size);

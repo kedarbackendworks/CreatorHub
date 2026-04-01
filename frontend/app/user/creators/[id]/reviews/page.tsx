@@ -58,7 +58,14 @@ export default function CreatorReviewsPage({ params }: { params: Promise<{ id: s
 
             <div className="flex flex-col gap-[24px] items-start w-full mt-[16px]">
               <div className="flex flex-col gap-[24px] shrink-0 w-full max-w-[400px]">
-                <ProfileHeader name={creator.name} bio={creator.bio} category={creator.category} />
+                <ProfileHeader 
+                  name={creator.name} 
+                  bio={creator.bio} 
+                  category={creator.category}
+                  membersCount={creator.membersCount}
+                  postsCount={creator.postsCount}
+                  averageRating={creator.averageRating}
+                />
                 <ConnectedLinks socialLinks={creator.socialLinks} />
               </div>
 

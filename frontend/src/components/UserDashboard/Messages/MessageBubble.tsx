@@ -296,18 +296,27 @@ export default function MessageBubble({
                       className="relative rounded-xl overflow-hidden cursor-pointer max-w-[280px]"
                       onClick={() => onOpenLightbox?.([{
                         type: 'video',
-                        width: 1920,
-                        height: 1080,
-                        sources: [{ src: message.mediaUrl || '', type: 'video/mp4' }],
+                        width: 1280,
+                        height: 720,
+                        sources: [{ src: message.mediaUrl || '' }],
+                        ...(message.thumbnailUrl ? { poster: message.thumbnailUrl } : {})
                       }], 0)}
                     >
-                      <video
-                        src={`${message.mediaUrl}#t=0.1`}
-                        className="w-full rounded-xl"
-                        preload="metadata"
-                        muted
-                        playsInline
-                      />
+                      {message.thumbnailUrl ? (
+                         <img
+                           src={message.thumbnailUrl}
+                           alt="Video thumbnail"
+                           className="w-full h-auto rounded-xl object-cover min-h-[150px]"
+                         />
+                      ) : (
+                        <video
+                          src={`${message.mediaUrl}#t=0.1`}
+                          className="w-full rounded-xl bg-black/5"
+                          preload="metadata"
+                          muted
+                          playsInline
+                        />
+                      )}
                       {/* Play button overlay */}
                       <div className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors rounded-xl">
                         <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">

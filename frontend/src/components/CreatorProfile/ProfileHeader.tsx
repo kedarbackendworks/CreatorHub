@@ -4,9 +4,18 @@ interface ProfileHeaderProps {
   name: string;
   bio: string;
   category: string;
+  membersCount?: number;
+  postsCount?: number;
+  averageRating?: number | null;
 }
 
-export default function ProfileHeader({ name, bio, category }: ProfileHeaderProps) {
+function formatCount(n: number): string {
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return String(n);
+}
+
+export default function ProfileHeader({ name, bio, category, membersCount, postsCount, averageRating }: ProfileHeaderProps) {
   return (
     <div className="flex flex-col gap-[12px] items-start w-full">
       <div className="flex flex-col gap-[7px] items-start text-[#1a1a1a] w-full">
@@ -21,7 +30,7 @@ export default function ProfileHeader({ name, bio, category }: ProfileHeaderProp
       <div className="flex gap-[24px] items-center text-[#5a5a5a] w-full mt-[5px]">
         <div className="flex flex-col gap-[4px] items-center justify-center w-[86px]">
           <p className="font-[family-name:var(--font-volkhov)] leading-[42.1px] text-[24px] tracking-[0.48px]">
-            83.4k
+            {membersCount !== undefined ? formatCount(membersCount) : '—'}
           </p>
           <p className="font-['Figtree',sans-serif] font-medium leading-[18.3px] text-[13px] tracking-[0.26px]">
             Members
@@ -29,7 +38,7 @@ export default function ProfileHeader({ name, bio, category }: ProfileHeaderProp
         </div>
         <div className="flex flex-col gap-[4px] items-center justify-center w-[58px]">
           <p className="font-[family-name:var(--font-volkhov)] leading-[42.1px] text-[24px] tracking-[0.48px]">
-            240
+            {postsCount !== undefined ? postsCount : '—'}
           </p>
           <p className="font-['Figtree',sans-serif] font-medium leading-[18.3px] text-[13px] tracking-[0.26px]">
             Posts
@@ -37,7 +46,7 @@ export default function ProfileHeader({ name, bio, category }: ProfileHeaderProp
         </div>
         <div className="flex flex-col gap-[4px] items-center justify-center w-[90px]">
           <p className="font-[family-name:var(--font-volkhov)] leading-[42.1px] text-[24px] tracking-[0.48px]">
-            3.2/5
+            {averageRating !== undefined && averageRating !== null ? `${averageRating}/5` : '—'}
           </p>
           <p className="font-['Figtree',sans-serif] font-medium leading-[18.3px] text-[13px] tracking-[0.26px]">
             Average rating
@@ -47,3 +56,4 @@ export default function ProfileHeader({ name, bio, category }: ProfileHeaderProp
     </div>
   );
 }
+

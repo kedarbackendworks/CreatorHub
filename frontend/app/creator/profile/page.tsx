@@ -8,6 +8,7 @@ import toast from 'react-hot-toast';
 export default function CreatorProfilePage() {
   const [activeTab, setActiveTab] = useState('Posts');
   const [creator, setCreator] = useState<any>(null);
+  const [stats, setStats] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function CreatorProfilePage() {
           api.get('/creator/posts')
         ]);
         setCreator(dashRes.data.creator);
+        setStats(dashRes.data.stats);
         setPosts(postRes.data);
         setName(dashRes.data.creator.name);
         setBio(dashRes.data.creator.bio || '');
@@ -157,7 +159,9 @@ export default function CreatorProfilePage() {
                               <p className="text-[13px] font-bold text-slate-400 uppercase tracking-tighter">Posts</p>
                            </div>
                            <div>
-                              <p className="text-[26px] font-black text-[#1c1917]">4.8/5</p>
+                              <p className="text-[26px] font-black text-[#1c1917]">
+                                {stats?.averageRating !== undefined && stats?.averageRating !== null ? `${stats.averageRating}/5` : '—'}
+                              </p>
                               <p className="text-[13px] font-bold text-slate-400 uppercase tracking-tighter">Rating</p>
                            </div>
                         </div>
@@ -285,7 +289,7 @@ export default function CreatorProfilePage() {
       {/* Edit Profile Modal */}
       {editModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-           <div className="bg-white w-full max-w-[500px] rounded-[32px] shadow-2xl p-8 relative animate-in fade-in zoom-in duration-200">
+           <div className="bg-white w-full max-w-[500px] max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl px-8 py-6 relative animate-in fade-in zoom-in duration-200">
               <button 
                 onClick={() => setEditModalOpen(false)}
                 className="absolute right-6 top-6 p-2 text-slate-400 hover:text-slate-600 transition-colors"

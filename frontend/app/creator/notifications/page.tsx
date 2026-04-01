@@ -9,6 +9,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 
 interface CreatorNotification {
   _id: string;
+  type?: string;
   content: string;
   isRead: boolean;
   createdAt: string;
@@ -57,7 +58,13 @@ export default function NotificationsPage() {
           prev.map((n) => (n._id === notification._id ? { ...n, isRead: true } : n))
         );
       }
-      if (notification.relatedId) {
+      
+      if (notification.type === 'message') {
+        router.push('/creator/messages');
+      } else if (notification.type === 'subscription') {
+        // For new subscribers, we could route to an audience page, or do nothing.
+      } else if (notification.relatedId) {
+        // Fallback for post-related notifications (likes, comments, views, tips, etc.)
         router.push(`/creator/post/${notification.relatedId}`);
       }
     } catch (error) {

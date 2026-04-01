@@ -175,9 +175,27 @@ exports.getCreatorProfile = async (req, res) => {
       }
     }
 
+    // Compute real stats in parallel
+    const [postsCount, ratingAgg] = await Promise.all([
+      Post.countDocuments({ creatorId: creator._id, status: 'published' }),
+      Review.aggregate([
+        { $match: { creator: creator._id } },
+        { $group: { _id: null, avg: { $avg: '$rating' }, count: { $sum: 1 } } }
+      ])
+    ]);
+
+    const averageRating = ratingAgg.length > 0
+      ? Math.round(ratingAgg[0].avg * 10) / 10
+      : null;
+    const totalReviews = ratingAgg.length > 0 ? ratingAgg[0].count : 0;
+
     res.json({
       ...creator.toObject(),
-      isSubscribed
+      isSubscribed,
+      postsCount,
+      averageRating,
+      totalReviews,
+      membersCount: creator.subscribers?.length || 0
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -573,13 +591,21 @@ exports.getCreatorReviews = async (req, res) => {
 exports.addCreatorReview = async (req, res) => {
   try {
     const { content, rating } = req.body;
+
+    if (!content || !content.trim()) {
+      return res.status(400).json({ message: 'Review content is required' });
+    }
+    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'A rating between 1 and 5 is required' });
+    }
+
     const existingReview = await Review.findOne({ user: req.user._id, creator: req.params.id });
-    if (existingReview) return res.status(400).json({ message: 'Already reviewed' });
+    if (existingReview) return res.status(400).json({ message: 'You have already reviewed this creator' });
 
     const newReview = await Review.create({
       user: req.user._id,
       creator: req.params.id,
-      content,
+      content: content.trim(),
       rating
     });
     const populatedReview = await Review.findById(newReview._id).populate('user', 'name avatar');

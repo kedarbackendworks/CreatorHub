@@ -9,6 +9,7 @@ const Notification = require('../models/Notification');
 const Livestream = require('../models/Livestream');
 const Message = require('../models/Message');
 const Block = require('../models/Block');
+const Review = require('../models/Review');
 
 // --- Dashboard ---
 const getDashboardData = async (req, res) => {
@@ -52,13 +53,23 @@ const getDashboardData = async (req, res) => {
       { name: 'Total', subscription: posts.reduce((sum, p) => sum + (p.revenue?.breakdown?.subscriptionPay || 0), 0), exclusive: posts.reduce((sum, p) => sum + (p.revenue?.breakdown?.directPurchase || 0), 0) },
     ];
 
+    // Compute dynamic rating
+    const ratingAgg = await Review.aggregate([
+      { $match: { creator: creator._id } },
+      { $group: { _id: null, avg: { $avg: '$rating' } } }
+    ]);
+    const averageRating = ratingAgg.length > 0
+      ? Math.round(ratingAgg[0].avg * 10) / 10
+      : null;
+
     res.json({
       creator,
       stats: {
         totalEarned,
         thisMonth,
         activeSubscribers,
-        postCount: posts.length
+        postCount: posts.length,
+        averageRating
       },
       postRevenueBreakdown,
       revenueHistory

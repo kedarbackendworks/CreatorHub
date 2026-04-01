@@ -3,6 +3,7 @@ import Image from 'next/image';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { Star } from 'lucide-react';
 
 interface ReviewReply {
   _id: string;
@@ -151,9 +152,10 @@ interface ReviewCardProps {
   name: string;
   reviewText: string;
   createdAt: string;
+  rating?: number;
 }
 
-export default function ReviewCard({ reviewId, avatarSrc, name, reviewText, createdAt }: ReviewCardProps) {
+export default function ReviewCard({ reviewId, avatarSrc, name, reviewText, createdAt, rating }: ReviewCardProps) {
   const { token } = useAuthStore();
   const [showReplies, setShowReplies] = useState(false);
   const [showReplyInput, setShowReplyInput] = useState(false);
@@ -235,9 +237,23 @@ export default function ReviewCard({ reviewId, avatarSrc, name, reviewText, crea
         <div className="relative size-[40px] shrink-0 rounded-full overflow-hidden bg-[#ebebeb]">
           <Image src={avatarSrc} alt={name} fill className="object-cover" />
         </div>
-        <p className="font-['Figtree',sans-serif] font-bold leading-[25.8px] text-[#3a3a3a] text-[16px] tracking-[0.32px]">
-          {name}
-        </p>
+        <div className="flex flex-col gap-[2px]">
+          <p className="font-['Figtree',sans-serif] font-bold leading-[25.8px] text-[#3a3a3a] text-[16px] tracking-[0.32px]">
+            {name}
+          </p>
+          {rating !== undefined && rating > 0 && (
+            <div className="flex items-center gap-[2px]">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star
+                  key={s}
+                  size={13}
+                  className={s <= rating ? 'fill-[#f95c4b] text-[#f95c4b]' : 'text-[#d8d1c7]'}
+                />
+              ))}
+              <span className="ml-1 text-[11px] font-semibold text-[#9a9a9a] font-['Figtree',sans-serif]">{rating}/5</span>
+            </div>
+          )}
+        </div>
       </div>
       
       <p className="font-['Figtree',sans-serif] font-medium leading-[18.3px] text-[#5a5a5a] text-[13px] tracking-[0.26px] w-[min-content] min-w-full">
