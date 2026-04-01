@@ -139,8 +139,8 @@ export default function InsightsPage() {
                            </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100/80">
-                           {audienceData.map((user: any) => (
-                              <tr key={user.id} className="hover:bg-slate-50 transition-colors group">
+                           {audienceData.map((user: any, idx: number) => (
+                              <tr key={user.id || idx} className="hover:bg-slate-50 transition-colors group">
                                  <td className="px-8 py-5">
                                     <div className="flex items-center gap-3">
                                        <img src={user.img} className="w-9 h-9 rounded-full border border-slate-200" alt="Avatar" />
@@ -151,10 +151,10 @@ export default function InsightsPage() {
                                  <td className="px-8 py-5 text-[14px] font-black text-rose-500 uppercase text-[11px]">{user.tier}</td>
                                  <td className="px-8 py-5 text-[14px] font-medium text-slate-500">{user.joinDate}</td>
                                  <td className="px-8 py-5 text-right relative">
-                                    <button onClick={(e) => toggleMenu(user.id, e)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
+                                    <button onClick={(e) => toggleMenu(user.id || idx, e)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
                                        <MoreVertical className="w-5 h-5" />
                                     </button>
-                                    {activeMenu === user.id && <PostMenu />}
+                                    {activeMenu === (user.id || idx) && <PostMenu />}
                                  </td>
                               </tr>
                            ))}
@@ -295,8 +295,8 @@ export default function InsightsPage() {
                               </tr>
                            </thead>
                            <tbody className="divide-y divide-slate-100/80">
-                              {postPerformance.map((post: any) => (
-                                 <tr key={post.id} className="hover:bg-slate-50 transition-colors">
+                              {postPerformance.map((post: any, idx: number) => (
+                                 <tr key={post.id || idx} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-8 py-4">
                                        <div className="flex items-center gap-4">
                                        <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
@@ -312,10 +312,10 @@ export default function InsightsPage() {
                                     <td className="px-8 py-4 text-[16px] font-black text-slate-700 font-['Fjalla One']">{post.renown}</td>
                                     <td className="px-8 py-4 text-[16px] font-black text-slate-400 font-['Fjalla One']">{post.other}</td>
                                     <td className="px-8 py-4 text-right pr-8 relative">
-                                       <button onClick={(e) => toggleMenu(post.id, e)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
-                                          <MoreVertical className="w-5 h-5" />
-                                       </button>
-                                       {activeMenu === post.id && <PostMenu />}
+                                    <button onClick={(e) => toggleMenu(post.id || idx, e)} className="p-2 text-slate-300 hover:text-slate-600 transition-colors">
+                                       <MoreVertical className="w-5 h-5" />
+                                    </button>
+                                    {activeMenu === (post.id || idx) && <PostMenu />}
                                     </td>
                                  </tr>
                               ))}

@@ -317,7 +317,7 @@ exports.getPostDetails = async (req, res) => {
       
       const user = await User.findById(userId);
       if (user) {
-        if (user.favorites && user.favorites.includes(post._id)) {
+        if (user.favorites && user.favorites.some(favId => favId && favId.toString() === post._id.toString())) {
           isFavorited = true;
         }
         if (post.isExclusive && user.memberships && user.memberships.some(mId => mId.toString() === post.creatorId._id.toString())) {
@@ -610,16 +610,26 @@ exports.addReviewReply = async (req, res) => {
 exports.toggleFavoritePost = async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ message: 'Post not found' });
+
     const user = await User.findById(req.user._id);
-    const isFavorited = user.favorites.some(favId => favId.toString() === post._id.toString());
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const postIdStr = post._id.toString();
+    const isFavorited = Array.isArray(user.favorites) &&
+      user.favorites.some(favId => favId && favId.toString() === postIdStr);
+
     if (isFavorited) {
-      user.favorites = user.favorites.filter(id => id.toString() !== post._id.toString());
+      // Remove from favorites using $pull - atomic, no Mongoose array method needed
+      await User.findByIdAndUpdate(req.user._id, { $pull: { favorites: post._id } });
     } else {
-      user.favorites.push(post._id);
+      // Add to favorites using $addToSet - prevents duplicates, atomic
+      await User.findByIdAndUpdate(req.user._id, { $addToSet: { favorites: post._id } });
     }
-    await user.save();
+
     res.json({ success: true, isFavorited: !isFavorited });
   } catch (err) {
+    console.error('toggleFavoritePost error:', err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -631,7 +641,7 @@ exports.getFavoritePosts = async (req, res) => {
       path: 'favorites',
       populate: { path: 'creatorId' }
     });
-    res.json(user.favorites.filter(p => p !== null));
+    res.json((user.favorites || []).filter(p => p !== null));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -641,14 +651,21 @@ exports.getFavoritePosts = async (req, res) => {
 exports.toggleSubscription = async (req, res) => {
   try {
     const creator = await Creator.findById(req.params.creatorId);
+    if (!creator) return res.status(404).json({ message: 'Creator not found' });
+    
     const user = await User.findById(req.user._id);
-    const isMember = user.memberships.some(id => id.toString() === creator._id.toString());
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    
+    if (!user.memberships) user.memberships = [];
+    if (!creator.subscribers) creator.subscribers = [];
+    
+    const isMember = user.memberships && user.memberships.some(id => id && id.toString() === creator._id.toString());
     if (isMember) {
-      user.memberships = user.memberships.filter(id => id.toString() !== creator._id.toString());
-      creator.subscribers = creator.subscribers.filter(id => id.toString() !== user._id.toString());
+      user.memberships.pull(creator._id);
+      creator.subscribers.pull(user._id);
     } else {
-      user.memberships.push(creator._id);
-      creator.subscribers.push(user._id);
+      user.memberships.addToSet(creator._id);
+      creator.subscribers.addToSet(user._id);
       creator.earnings.total += (creator.subscriptionPrice || 0);
       creator.earnings.thisMonth += (creator.subscriptionPrice || 0);
     }

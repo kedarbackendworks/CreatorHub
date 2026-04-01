@@ -16,6 +16,7 @@ interface FeedPost {
   title: string;
   mediaUrl?: string;
   thumbnailUrl?: string;
+  mediaType?: string;
   isExclusive?: boolean;
   createdAt: string;
   likes: number;
@@ -448,14 +449,17 @@ export default function ProfileContentFeed({ creatorId }: ProfileContentFeedProp
             <div key={post._id} className="flex flex-col gap-[12px] items-start shrink-0">
               <Link href={`/user/posts/${post._id}`} className="w-full">
                 <div className="flex flex-col h-[200px] items-start justify-end overflow-hidden p-[12px] relative rounded-[12px] w-full">
-                  <div aria-hidden="true" className="absolute inset-0 pointer-events-none rounded-[12px]">
-                    <div className="absolute bg-[#ebebeb] inset-0 rounded-[12px]" />
-                    <Image
-                      src={post.thumbnailUrl || post.mediaUrl || '/assets/creator/thumbnail.png'}
-                      alt={post.title}
-                      fill
-                      className="object-cover"
-                    />
+                  <div aria-hidden="true" className="absolute inset-0 pointer-events-none rounded-[12px] flex items-center justify-center bg-[#ebebeb]">
+                    {post.mediaType === 'file' ? (
+                      <div className="text-6xl select-none">📄</div>
+                    ) : (
+                      <Image
+                        src={post.thumbnailUrl || post.mediaUrl || '/assets/creator/thumbnail.png'}
+                        alt={post.title}
+                        fill
+                        className="object-cover rounded-[12px]"
+                      />
+                    )}
                   </div>
 
                   {post.isExclusive && (
