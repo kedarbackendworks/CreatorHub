@@ -65,8 +65,18 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
               </div>
 
               <div className="flex flex-col gap-[24px] items-start w-full mt-[24px]">
-                <ContentTabs creatorId={id as string} />
-                <ProfileContentFeed creatorId={creator._id} />
+                <ContentTabs 
+                  creatorId={id as string} 
+                  contentCounts={creator.contentCounts} 
+                  defaultTab={activeTab} 
+                  onTabChange={setActiveTab} 
+                />
+                
+                {activeTab === 'livestreams' ? (
+                  <LivestreamFeed creatorId={creator._id} />
+                ) : (
+                  <ProfileContentFeed creatorId={creator._id} />
+                )}
               </div>
             </div>
           </div>

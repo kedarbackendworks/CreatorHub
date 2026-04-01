@@ -15,11 +15,13 @@ interface ContentCounts {
 export default function ContentTabs({ 
   defaultTab = 'posts', 
   creatorId: propCreatorId,
-  contentCounts
+  contentCounts,
+  onTabChange
 }: { 
   defaultTab?: string, 
   creatorId?: string,
-  contentCounts?: ContentCounts
+  contentCounts?: ContentCounts,
+  onTabChange?: (tabId: string) => void
 }) {
   const params = useParams();
   const router = useRouter();
