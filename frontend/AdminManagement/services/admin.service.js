@@ -205,6 +205,39 @@ async function createAdmin(payload) {
     addedBy: payload.addedBy || null,
   });
 
+  let linkedUser = await User.findOne({ email });
+  if (!linkedUser) {
+    let userUsername = username;
+    let usernameSuffix = 0;
+    while (await User.findOne({ username: userUsername })) {
+      usernameSuffix += 1;
+      userUsername = `${username}_${usernameSuffix}`.slice(0, 30);
+    }
+
+    let phone = `8${String(Date.now()).slice(-9)}`;
+    let phoneSuffix = 0;
+    while (await User.findOne({ phone })) {
+      phoneSuffix += 1;
+      phone = `8${String(Date.now() + phoneSuffix).slice(-9)}`;
+    }
+
+    await User.create({
+      name,
+      username: userUsername,
+      phone,
+      email,
+      password,
+      role: 'admin',
+      isVerified: true,
+    });
+  } else {
+    linkedUser.role = 'admin';
+    linkedUser.name = name;
+    linkedUser.password = password;
+    linkedUser.isVerified = true;
+    await linkedUser.save();
+  }
+
   return admin.toJSON();
 }
 

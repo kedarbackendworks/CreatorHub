@@ -8,6 +8,8 @@ const connectDB = require('./config/db');
 const creatorRoutes = require('./routes/creatorRoutes');
 const moderationRoutes = require('../frontend/Moderation/routes');
 const adminManagementRoutes = require('../frontend/AdminManagement/routes/admin.routes');
+const userSupportRoutes = require('../frontend/UserSupport/routes/userTicket.routes');
+const supportTicketRoutes = require('../frontend/SupportTickets/routes/ticket.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -42,6 +44,8 @@ app.use('/api/user', require('./routes/userRoutes'));
 app.use('/api/livestream', require('./routes/livestreamRoutes'));
 app.use('/api/moderation', moderationRoutes);
 app.use('/api/admin-management', adminManagementRoutes);
+app.use('/api/support/user', userSupportRoutes);
+app.use('/api/support', supportTicketRoutes);
 
 app.get('/', (req, res) => {
   res.send('API running...');

@@ -6,6 +6,7 @@ import { Home, Bell, Library, MessageSquare, Megaphone, Receipt, PlusCircle, Pen
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
+import SupportNavItem from '@/UserSupport/components/SupportNavItem';
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -76,6 +77,7 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
           <Link href="/creator/payout" className={isActive('/creator/payout')}>
             <Receipt className="w-5 h-5 stroke-[1.5]" /> Payout
           </Link>
+          <SupportNavItem role="creator" className={isActive('/creator/support')} />
 
           <div className="mt-4">
              <button 

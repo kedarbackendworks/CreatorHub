@@ -1,4 +1,5 @@
 const Report = require('../models/ReportModel');
+const { syncFromReport } = require('../../SupportTickets/services/ticket.service');
 
 /**
  * File a report with deduplication against pending reports.
@@ -19,10 +20,12 @@ async function fileReport(reportData) {
     );
 
     const updated = await Report.findById(existing._id);
+    await syncFromReport(existing._id);
     return { report: updated, isDuplicate: true };
   }
 
   const created = await Report.create(reportData);
+  await syncFromReport(created._id);
   return { report: created, isDuplicate: false };
 }
 

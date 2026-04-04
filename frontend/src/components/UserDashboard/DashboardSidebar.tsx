@@ -8,6 +8,7 @@ import { Menu, X } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
+import SupportNavItem from '@/UserSupport/components/SupportNavItem';
 
 const NAV_ITEMS = [
   { label: 'Home', icon: '/assets/dashboard/icon-home.svg', href: '/user' },
@@ -70,6 +71,19 @@ export default function DashboardSidebar() {
             </Link>
           );
         })}
+
+        <SupportNavItem
+          role="user"
+          className={`flex items-center gap-[12px] h-[56px] px-[24px] py-[8px] w-full transition-colors cursor-pointer hover:bg-[#f6f4f1] ${
+            pathname === '/user/support' || pathname.startsWith('/user/support/')
+              ? 'border-r-4 border-[#f95c4b] bg-white'
+              : 'border-r-4 border-transparent'
+          }`}
+          iconClassName="w-[20px] h-[20px] text-[#5a5a5a]"
+          labelClassName={`font-[family-name:var(--font-figtree)] font-medium leading-[25.8px] text-[16px] tracking-[0.32px] whitespace-nowrap ${
+            pathname === '/user/support' || pathname.startsWith('/user/support/') ? 'text-[#3a3a3a]' : 'text-[#5a5a5a]'
+          }`}
+        />
       </nav>
 
       <div className="relative flex flex-col items-start justify-end w-full shrink-0">

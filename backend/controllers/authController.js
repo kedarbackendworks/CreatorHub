@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Creator = require('../models/Creator');
+const Admin = require('../../frontend/AdminManagement/models/AdminModel');
 const generateToken = require('../utils/generateToken');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
@@ -101,9 +102,10 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  const normalizedEmail = String(email || '').trim().toLowerCase();
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.matchPassword(password))) {
       res.json({
@@ -115,9 +117,64 @@ const loginUser = async (req, res) => {
         countryOfResidence: user.countryOfResidence,
         token: generateToken(user._id),
       });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      return;
     }
+
+    // Fallback: allow AdminManagement credentials to log in via shared auth.
+    const admin = await Admin.findOne({ email: normalizedEmail });
+    if (!admin || admin.status !== 'active') {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    const isAdminPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isAdminPasswordValid) {
+      return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    let linkedUser = await User.findOne({ email: normalizedEmail });
+    if (!linkedUser) {
+      const baseUsername = (admin.username || normalizedEmail.split('@')[0] || 'admin')
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, '_')
+        .slice(0, 24) || 'admin';
+
+      let username = baseUsername;
+      let usernameSuffix = 0;
+      while (await User.findOne({ username })) {
+        usernameSuffix += 1;
+        username = `${baseUsername}_${usernameSuffix}`.slice(0, 30);
+      }
+
+      let phone = `9${String(Date.now()).slice(-9)}`;
+      let phoneSuffix = 0;
+      while (await User.findOne({ phone })) {
+        phoneSuffix += 1;
+        phone = `9${String(Date.now() + phoneSuffix).slice(-9)}`;
+      }
+
+      linkedUser = await User.create({
+        name: admin.name,
+        username,
+        phone,
+        email: normalizedEmail,
+        password,
+        role: 'admin',
+        isVerified: true,
+      });
+    } else if (linkedUser.role !== 'admin') {
+      linkedUser.role = 'admin';
+      await linkedUser.save();
+    }
+
+    return res.json({
+      _id: linkedUser._id,
+      name: linkedUser.name,
+      email: linkedUser.email,
+      role: linkedUser.role,
+      avatar: linkedUser.avatar,
+      countryOfResidence: linkedUser.countryOfResidence,
+      token: generateToken(linkedUser._id),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

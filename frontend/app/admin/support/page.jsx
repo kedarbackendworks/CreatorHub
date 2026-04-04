@@ -2,6 +2,6 @@
 
 import SupportDashboardPageModule from '@/SupportTickets/app/admin/support/page';
 
-export default function SupportPage() {
+export default function Page() {
   return <SupportDashboardPageModule />;
 }
