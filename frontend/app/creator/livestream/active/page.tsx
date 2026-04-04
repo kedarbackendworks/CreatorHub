@@ -103,10 +103,10 @@ export default function ActiveLivestreamPage() {
   }
 
   return (
-    <div className="flex bg-[#0f0f0f] h-[calc(100vh-72px)] font-sans overflow-hidden">
+    <div className="flex flex-col lg:flex-row bg-[#0f0f0f] min-h-[calc(100vh-72px)] lg:h-[calc(100vh-72px)] font-sans overflow-hidden">
       
       {/* Main Stream Area */}
-      <div className="flex-1 flex flex-col p-6 lg:p-8 relative min-w-0">
+      <div className="flex-1 flex flex-col p-4 sm:p-6 lg:p-8 relative min-w-0">
         
         {/* Connection Warning */}
         {!isConnected && (
@@ -212,7 +212,7 @@ export default function ActiveLivestreamPage() {
       </div>
 
       {/* Right Chat Sidebar */}
-      <div className="w-[380px] lg:w-[420px] bg-[#141414] border-l border-white/5 flex flex-col shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-10">
+      <div className="w-full lg:w-[380px] xl:w-[420px] bg-[#141414] border-l border-white/5 flex flex-col shrink-0 shadow-[-10px_0_30px_rgba(0,0,0,0.5)] z-10 max-h-[50vh] lg:max-h-none">
          
          <div className="h-[72px] border-b border-white/5 px-6 flex items-center justify-between shrink-0 bg-[#18181b]">
             <h3 className="text-lg font-bold text-white flex items-center gap-3">

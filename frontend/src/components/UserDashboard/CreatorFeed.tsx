@@ -36,7 +36,7 @@ export default function CreatorFeed({ activeCategory }: CreatorFeedProps) {
     : creators.filter((c: any) => c.category === activeCategory);
 
   return (
-    <div className="flex flex-col gap-[16px] w-full max-w-[1116px] mt-[48px] pb-[64px]">
+    <div className="flex flex-col gap-[14px] sm:gap-[16px] w-full max-w-[1116px] mt-8 sm:mt-10 md:mt-[48px] pb-[64px]">
       <h3 className="font-[family-name:var(--font-figtree)] font-semibold leading-[29.2px] text-[#3a3a3a] text-[19px] tracking-[0.38px] mb-[4px]">
         {activeCategory === 'All' ? 'All Creators' : `${activeCategory} Creators`}
       </h3>
@@ -46,7 +46,7 @@ export default function CreatorFeed({ activeCategory }: CreatorFeedProps) {
           <CreatorCard key={creator._id} creator={creator} />
         ))
       ) : (
-        <div className="bg-[#fcfaf7] border border-dashed border-[#e4ded2] rounded-[12px] p-20 text-center text-zinc-500">
+        <div className="bg-[#fcfaf7] border border-dashed border-[#e4ded2] rounded-[12px] p-8 sm:p-14 md:p-20 text-center text-zinc-500">
           No creators found in this category yet.
         </div>
       )}

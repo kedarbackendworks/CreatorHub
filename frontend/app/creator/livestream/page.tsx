@@ -116,10 +116,10 @@ export default function CreateLivestreamPage() {
   };
 
   return (
-    <div className="flex bg-[#f9f9f9] min-h-screen font-sans">
+    <div className="flex flex-col xl:flex-row bg-[#f9f9f9] min-h-screen font-sans">
       
       {/* Left Column: Camera Preview */}
-      <div className="flex-1 p-12 max-w-5xl border-r border-slate-200/60 overflow-y-auto">
+      <div className="flex-1 p-4 sm:p-6 lg:p-12 max-w-5xl border-r border-slate-200/60 overflow-y-auto">
          <header className="mb-12">
             <h1 className="text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Create a livestream</h1>
             <p className="text-2xl font-bold text-slate-600 tracking-tight leading-tight">
@@ -175,7 +175,7 @@ export default function CreateLivestreamPage() {
       </div>
 
       {/* Right Column: Settings */}
-      <aside className="w-[380px] p-8 bg-white overflow-y-auto shrink-0 border-l border-slate-200/60 h-screen sticky top-0 shadow-sm">
+      <aside className="hidden xl:block w-[380px] p-8 bg-white overflow-y-auto shrink-0 border-l border-slate-200/60 h-screen sticky top-0 shadow-sm">
          
          <button 
            onClick={handleStartLive}

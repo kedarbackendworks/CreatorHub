@@ -10,7 +10,7 @@ export default function AddCreditsPage() {
       <DashboardSidebar />
       
       {/* Main Content Area - Padded left to account for sidebar */}
-      <main className="flex-1 ml-[240px] pl-[42px] pr-[42px] pt-[42px] pb-[60px] flex flex-col items-start min-h-screen relative">
+      <main className="flex-1 md:ml-[240px] px-4 sm:px-6 md:pl-[42px] md:pr-[42px] pt-20 md:pt-[42px] pb-[60px] flex flex-col items-start min-h-screen relative">
         
         {/* Back Button positioned absolute top-left to match Figma */}
         <div className="absolute top-[42px] left-[42px]">
@@ -31,3 +31,4 @@ export default function AddCreditsPage() {
     </div>
   );
 }
+

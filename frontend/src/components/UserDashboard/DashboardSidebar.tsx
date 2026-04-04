@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Menu, X } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
@@ -19,14 +20,20 @@ const NAV_ITEMS = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
   const unreadCount = useAuthStore((state) => state.unreadCount);
 
   useNotifications('user');
 
-  return (
-    <aside className="fixed left-0 top-0 h-screen w-[240px] bg-[#faf8f5] flex flex-col z-50 overflow-hidden shrink-0">
-      {/* Logo */}
-      <Link href="/user" className="flex items-center gap-[12px] px-[24px] py-[24px] w-full shrink-0">
+  const handleNavigate = () => setIsMobileOpen(false);
+
+  const SidebarContent = ({ mobile = false }: { mobile?: boolean }) => (
+    <>
+      <Link
+        href="/user"
+        onClick={mobile ? handleNavigate : undefined}
+        className="flex items-center gap-[12px] px-[24px] py-[24px] w-full shrink-0"
+      >
         <div className="relative size-[24px] shrink-0">
           <Image src="/assets/dashboard/icon-logo.svg" alt="Logo" fill />
         </div>
@@ -35,7 +42,6 @@ export default function DashboardSidebar() {
         </p>
       </Link>
 
-      {/* Navigation */}
       <nav className="flex flex-col w-full flex-1 mt-4 gap-1">
         {NAV_ITEMS.map((item, index) => {
           const isActive = pathname === item.href;
@@ -45,6 +51,7 @@ export default function DashboardSidebar() {
             <Link
               href={item.href}
               key={index}
+              onClick={mobile ? handleNavigate : undefined}
               className={`flex items-center gap-[12px] h-[56px] px-[24px] py-[8px] w-full transition-colors cursor-pointer hover:bg-[#f6f4f1] ${
                 isActive ? 'border-r-4 border-[#f95c4b] bg-white' : 'border-r-4 border-transparent'
               }`}
@@ -65,9 +72,7 @@ export default function DashboardSidebar() {
         })}
       </nav>
 
-      {/* Profile Area */}
       <div className="relative flex flex-col items-start justify-end w-full shrink-0">
-        {/* Settings Popover */}
         {isSettingsOpen && (
           <SettingsModal onClose={() => setIsSettingsOpen(false)} />
         )}
@@ -91,6 +96,44 @@ export default function DashboardSidebar() {
           </button>
         </div>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#faf8f5] border-b border-[#e4ded2] z-40 px-4 flex items-center justify-between">
+        <Link href="/user" className="flex items-center gap-2.5">
+          <div className="relative size-5 shrink-0">
+            <Image src="/assets/dashboard/icon-logo.svg" alt="Logo" fill />
+          </div>
+          <p className="font-[family-name:var(--font-figtree)] font-semibold text-[#f95c4b] text-[15px]">
+            Logo
+          </p>
+        </Link>
+        <button
+          onClick={() => setIsMobileOpen((prev) => !prev)}
+          className="w-9 h-9 rounded-full border border-[#e4ded2] bg-white text-[#5a5a5a] flex items-center justify-center"
+          aria-label="Toggle navigation"
+        >
+          {isMobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+        </button>
+      </div>
+
+      {isMobileOpen && (
+        <button
+          className="md:hidden fixed inset-0 bg-black/40 z-40"
+          aria-label="Close navigation"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      <aside className={`md:hidden fixed left-0 top-0 h-screen w-[240px] bg-[#faf8f5] flex flex-col z-50 overflow-hidden shrink-0 transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <SidebarContent mobile />
+      </aside>
+
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[240px] bg-[#faf8f5] flex-col z-30 overflow-hidden shrink-0">
+        <SidebarContent />
+      </aside>
+    </>
   );
 }

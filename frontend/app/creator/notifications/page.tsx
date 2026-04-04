@@ -91,11 +91,11 @@ export default function NotificationsPage() {
   const earlierNotifications = notifications.filter(n => new Date(n.createdAt).toLocaleDateString() !== today);
 
   return (
-    <div className="p-12 max-w-6xl w-full mx-auto font-sans bg-[#f9f9f9] min-h-screen">
-       <header className="mb-12 flex items-start justify-between gap-6">
+    <div className="p-4 sm:p-6 md:p-12 max-w-6xl w-full mx-auto font-sans bg-[#f9f9f9] min-h-screen">
+       <header className="mb-8 md:mb-12 flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
           <div>
-            <h1 className="text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Notifications</h1>
-            <p className="text-2xl font-bold text-slate-600 tracking-tight leading-tight max-w-4xl">
+            <h1 className="text-[40px] sm:text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Notifications</h1>
+            <p className="text-[20px] sm:text-2xl font-bold text-slate-600 tracking-tight leading-tight max-w-4xl">
               Stay updated on activity, engagement, and important updates related to your content.
             </p>
           </div>
@@ -104,7 +104,7 @@ export default function NotificationsPage() {
             type="button"
             onClick={markAllAsRead}
             disabled={markingAll || notifications.length === 0}
-            className="px-6 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            className="px-5 py-2.5 bg-white border border-slate-200 rounded-full text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
           >
             {markingAll ? 'Marking...' : 'Mark all as read'}
           </button>

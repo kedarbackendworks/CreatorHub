@@ -155,18 +155,18 @@ export default function CreatorHomePage() {
     <div className="flex flex-col items-center bg-[#f9f9f9] min-h-screen font-sans pb-20 relative">
 
       {/* Hero Section */}
-      <div className="w-full max-w-5xl px-8 flex flex-col items-center justify-center pt-16 pb-12 relative">
-        <h1 className="text-[42px] font-bold text-[#1c1917] tracking-tighter mb-2 shadow-sm font-['Fjalla One'] uppercase">
+      <div className="w-full max-w-5xl px-4 sm:px-6 md:px-8 flex flex-col items-center justify-center pt-8 md:pt-16 pb-8 md:pb-12 relative">
+        <h1 className="text-[34px] sm:text-[42px] font-bold text-[#1c1917] tracking-tighter mb-2 shadow-sm font-['Fjalla One'] uppercase text-center">
           {creator?.name || 'Creator Name'}
         </h1>
         <p className="text-slate-500 font-medium mb-8">@{creator?.username || 'username'}</p>
 
-        <div className="flex gap-10 border-b border-slate-200/80 w-full justify-center">
+        <div className="flex gap-6 md:gap-10 border-b border-slate-200/80 w-full justify-start md:justify-center overflow-x-auto hide-scrollbar">
           {['Home', 'Collections', 'Shop', 'Membership', 'Recommendations'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`text-[15px] font-bold pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-[#1c1917] border-rose-500' : 'text-slate-400 hover:text-slate-800 border-transparent'}`}
+              className={`shrink-0 text-[13px] md:text-[15px] font-bold pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-[#1c1917] border-rose-500' : 'text-slate-400 hover:text-slate-800 border-transparent'}`}
             >
               {tab}
             </button>
@@ -175,14 +175,14 @@ export default function CreatorHomePage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="w-full max-w-4xl px-8 flex flex-col items-stretch space-y-6 text-slate-800">
+      <div className="w-full max-w-4xl px-4 sm:px-6 md:px-8 flex flex-col items-stretch space-y-6 text-slate-800">
 
         {/* ----- HOME TAB ----- */}
         {activeTab === 'Home' && (
           <>
             {/* Header Row */}
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-[28px] font-bold tracking-tight text-[#1c1917] font-['Fjalla One'] uppercase">Home</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2">
+              <h2 className="text-[24px] sm:text-[28px] font-bold tracking-tight text-[#1c1917] font-['Fjalla One'] uppercase">Home</h2>
               <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setBasicsOpen(true)}

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Info, Paperclip, AlignLeft, Bold, Italic, MessageSquare, Smile, X, Play, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Search, Info, Paperclip, AlignLeft, Bold, Italic, MessageSquare, Smile, X, Play, Loader2, Image as ImageIcon, ChevronLeft } from 'lucide-react';
 import axios from 'axios';
 import Image from 'next/image';
 import api from '@/src/lib/api';
@@ -690,7 +690,7 @@ export default function MessagesPage() {
      <div className="flex h-[calc(100vh-72px)] bg-[#f6f4f1] font-sans overflow-hidden">
       
       {/* Sidebar - Conversation List */}
-      <div className="w-[304px] border-r border-[#e4ded2] bg-[#faf8f5] flex flex-col h-full shrink-0 z-10">
+      <div className={`w-full md:w-[304px] border-r border-[#e4ded2] bg-[#faf8f5] flex flex-col h-full shrink-0 z-10 ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
         <div className="px-6 pt-6 pb-4">
           <h1 className="font-[family-name:var(--font-fjalla)] text-[28px] text-[#1a1a1a] leading-none">Messages</h1>
           <div className="relative mt-4 mx-[-8px]">
@@ -731,13 +731,20 @@ export default function MessagesPage() {
       </div>
 
       {/* Main Chat Area */}
-              <div className="flex-1 flex flex-col h-full bg-[#f6f4f1] relative overflow-x-hidden">
+              <div className={`flex-1 flex-col h-full bg-[#f6f4f1] relative overflow-x-hidden ${activeConversation ? 'flex' : 'hidden md:flex'}`}>
          
          {/* Chat Header */}
          {activeConversation ? (
            <>
             <header className="h-[68px] bg-[#faf8f5] border-b border-[#e4ded2] flex items-center justify-between px-6 shrink-0 z-0">
                 <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => setSelectedChatId(null)}
+                    className="md:hidden w-8 h-8 rounded-full border border-[#e4ded2] bg-white text-[#5a5a5a] flex items-center justify-center"
+                    aria-label="Back to conversations"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
                   <div className="relative">
                       <div className="relative w-10 h-10 rounded-full border border-[#e4ded2] bg-[#f95c4b]/10 shadow-sm overflow-hidden">
                         <Image

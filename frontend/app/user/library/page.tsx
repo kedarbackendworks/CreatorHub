@@ -29,7 +29,7 @@ export default function LibraryPage() {
     <div className="min-h-screen bg-[var(--bg,#f6f4f1)] flex relative overflow-x-hidden">
       <DashboardSidebar />
       
-      <main className="flex-1 ml-[240px] pl-[42px] pr-[42px] pt-[42px] flex flex-col items-start">
+      <main className="flex-1 md:ml-[240px] px-4 sm:px-6 md:pl-[42px] md:pr-[42px] pt-20 md:pt-[42px] flex flex-col items-start">
         <div className="w-full max-w-[1116px] flex flex-col items-start min-h-screen">
           
           <div className="flex flex-col gap-[4px] mb-[32px] w-full">
@@ -73,3 +73,4 @@ export default function LibraryPage() {
     </div>
   );
 }
+

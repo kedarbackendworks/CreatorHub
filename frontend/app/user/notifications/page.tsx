@@ -177,14 +177,14 @@ export default function NotificationsPage() {
       <DashboardSidebar />
       
       {/* Main Content Area - Padded left to account for sidebar */}
-      <main className="flex-1 ml-[240px] pl-[42px] pr-[42px] pt-[42px] flex flex-col items-start">
+      <main className="flex-1 md:ml-[240px] px-4 sm:px-6 md:pl-[42px] md:pr-[42px] pt-20 md:pt-[42px] flex flex-col items-start">
         <div className="w-full max-w-[1116px] flex flex-col items-start min-h-screen">
-          <div className="flex items-start justify-between w-full mb-[32px] gap-[16px]">
+          <div className="flex flex-col sm:flex-row items-start justify-between w-full mb-[24px] sm:mb-[32px] gap-[12px] sm:gap-[16px]">
             <div className="flex flex-col gap-[4px]">
-              <h1 className="font-[family-name:var(--font-fjalla)] font-normal text-[40px] text-[var(--heading,#1a1a1a)] tracking-[0.8px] leading-[57.6px]">
+              <h1 className="font-[family-name:var(--font-fjalla)] font-normal text-[34px] sm:text-[40px] text-[var(--heading,#1a1a1a)] tracking-[0.8px] leading-[1.1] sm:leading-[57.6px]">
                 Notifications
               </h1>
-              <p className="font-[family-name:var(--font-fjalla)] font-normal text-[33px] text-[var(--sub-head,#3a3a3a)] tracking-[0.66px] leading-[48.6px]">
+              <p className="font-[family-name:var(--font-fjalla)] font-normal text-[18px] sm:text-[33px] text-[var(--sub-head,#3a3a3a)] tracking-[0.4px] sm:tracking-[0.66px] leading-[1.25] sm:leading-[48.6px] max-w-[700px]">
                 Stay updated with new content, updates, and important activity from creators.
               </p>
             </div>
@@ -193,7 +193,7 @@ export default function NotificationsPage() {
               type="button"
               onClick={markAllAsRead}
               disabled={markingAll || notifications.length === 0}
-              className="h-[40px] px-[20px] bg-transparent border border-[#e4ded2] rounded-[32px] font-[family-name:var(--font-figtree)] font-semibold text-[14px] text-[#1a1a1a] hover:bg-[#f6f4f1] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="h-[40px] px-[20px] bg-transparent border border-[#e4ded2] rounded-[32px] font-[family-name:var(--font-figtree)] font-semibold text-[14px] text-[#1a1a1a] hover:bg-[#f6f4f1] transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap"
             >
               {markingAll ? 'Marking...' : 'Mark all as read'}
             </button>
@@ -222,3 +222,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

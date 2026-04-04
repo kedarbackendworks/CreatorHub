@@ -12,10 +12,10 @@ export default function CreatorPostDetailPage() {
       <DashboardSidebar />
 
       {/* Main Layout Area - Offset by Sidebar width */}
-      <main className="flex-1 flex flex-col pl-[240px] relative w-full overflow-x-hidden min-h-screen">
+      <main className="flex-1 flex flex-col md:pl-[240px] pt-20 md:pt-0 relative w-full overflow-x-hidden min-h-screen">
         
         {/* Padded Container for all the Post elements */}
-        <div className="px-[42px] pt-[42px] pb-[64px] flex flex-col items-start w-[calc(100%-240px)] max-w-[1400px]">
+        <div className="px-4 sm:px-6 md:px-[42px] pt-20 md:pt-[42px] pb-[64px] flex flex-col items-start w-full md:w-[calc(100%-240px)] max-w-[1400px]">
           
           <PostHeader />
           <PostHeroImage />
@@ -29,3 +29,4 @@ export default function CreatorPostDetailPage() {
     </div>
   );
 }
+

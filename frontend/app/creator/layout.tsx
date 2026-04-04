@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bell, Library, MessageSquare, Megaphone, Receipt, PlusCircle, PenTool, Video, MoreVertical, FileText, X, ChevronDown, History } from 'lucide-react';
-import React, { useState } from 'react';
+import { Home, Bell, Library, MessageSquare, Megaphone, Receipt, PlusCircle, PenTool, Video, MoreVertical, FileText, X, ChevronDown, History, Menu } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
 
@@ -12,11 +12,16 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
   const [createOpen, setCreateOpen] = useState(true);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [publishModalOpen, setPublishModalOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
   const unreadCount = useAuthStore((state) => state.unreadCount);
   const logout = useAuthStore((state) => state.logout);
 
   useNotifications('creator');
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [pathname]);
 
   const isActive = (path: string) => {
     return pathname === path 
@@ -26,8 +31,16 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
 
   return (
     <div className="flex min-h-screen bg-[#f9f9f9] text-slate-800 font-sans relative overflow-x-hidden">
+      {mobileNavOpen && (
+        <button
+          className="lg:hidden fixed inset-0 bg-slate-900/40 z-30"
+          onClick={() => setMobileNavOpen(false)}
+          aria-label="Close navigation"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-[280px] bg-[#f9f9f9] flex flex-col pt-6 pb-6 h-screen sticky top-0 border-r border-slate-200/60 shrink-0 z-20">
+      <aside className={`w-[280px] bg-[#f9f9f9] flex flex-col pt-6 pb-6 h-screen fixed lg:sticky top-0 left-0 border-r border-slate-200/60 shrink-0 z-40 lg:z-20 transition-transform duration-300 ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="flex items-center gap-3 px-8 mb-10">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#ff5a36"/>
@@ -122,26 +135,33 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden lg:ml-0">
         {/* Top Header */}
-        <header className="h-[72px] shrink-0 border-b border-slate-200/80 flex items-center justify-between px-8 bg-[#f9f9f9] z-10 w-full">
+        <header className="h-[72px] shrink-0 border-b border-slate-200/80 flex items-center justify-between px-4 md:px-8 bg-[#f9f9f9] z-10 w-full">
            {/* Left side info */}
-           <div>
+           <div className="flex items-center gap-3">
+              <button
+                onClick={() => setMobileNavOpen(true)}
+                className="lg:hidden w-9 h-9 rounded-full border border-slate-200 bg-white flex items-center justify-center text-slate-600"
+                aria-label="Open navigation"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
               <h2 className="text-sm font-bold text-slate-500 leading-tight">Your page is not published yet</h2>
            </div>
 
            {/* Right side actions */}
-           <div className="flex items-center gap-8">
+           <div className="flex items-center gap-3 md:gap-8">
               <button 
                 onClick={() => setPublishModalOpen(true)}
-                className="px-6 py-2 bg-[#d94828] hover:bg-[#c93d1f] text-white text-sm font-bold rounded-full transition-all shadow-md flex items-center gap-2"
+                className="hidden sm:flex px-6 py-2 bg-[#d94828] hover:bg-[#c93d1f] text-white text-sm font-bold rounded-full transition-all shadow-md items-center gap-2"
               >
                 Publish Now <FileText className="w-4 h-4" />
               </button>
 
-              <div className="h-6 w-px bg-slate-200 mx-2"></div>
+              <div className="hidden sm:block h-6 w-px bg-slate-200 mx-2"></div>
 
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3 md:gap-5">
                   <Link href="/creator/library" className="text-slate-400 hover:text-slate-600 transition-colors">
                     <History className="w-5 h-5 stroke-[1.5]" />
                   </Link>

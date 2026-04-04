@@ -83,26 +83,26 @@ export default function InsightsPage() {
    );
 
    return (
-      <div className="p-12 max-w-7xl w-full mx-auto bg-[#f9f9f9] min-h-screen font-sans" onClick={() => setActiveMenu(null)}>
+      <div className="p-4 sm:p-6 md:p-12 max-w-7xl w-full mx-auto bg-[#f9f9f9] min-h-screen font-sans" onClick={() => setActiveMenu(null)}>
 
-         <header className="mb-12 flex justify-between items-start">
+         <header className="mb-8 md:mb-12 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
-               <h1 className="text-[52px] font-black text-[#1c1917] tracking-tighter mb-2 font-['Fjalla One'] uppercase">Insights</h1>
-               <p className="text-3xl font-bold text-slate-800 tracking-tight leading-tight max-w-2xl">
+               <h1 className="text-[40px] sm:text-[52px] font-black text-[#1c1917] tracking-tighter mb-2 font-['Fjalla One'] uppercase">Insights</h1>
+               <p className="text-[20px] sm:text-3xl font-bold text-slate-800 tracking-tight leading-tight max-w-2xl">
                   Track your audience, memberships, and content performance with real-time metrics.
                </p>
             </div>
-            <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[13px] font-bold rounded-full hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2 mt-4">
+            <button className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[13px] font-bold rounded-full hover:bg-slate-50 transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap">
                Download report <Download className="w-4 h-4 text-slate-400" />
             </button>
          </header>
 
-         <div className="flex gap-10 border-b border-slate-200/60 mb-10">
+         <div className="flex gap-6 md:gap-10 border-b border-slate-200/60 mb-10 overflow-x-auto hide-scrollbar">
             {['Audience', 'Sales', 'Memberships', 'Posts'].map((tab) => (
                <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`text-[13px] font-black uppercase tracking-widest pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-rose-500 border-rose-500' : 'text-slate-400 hover:text-slate-600 border-transparent'}`}
+                  className={`shrink-0 text-[13px] font-black uppercase tracking-widest pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-rose-500 border-rose-500' : 'text-slate-400 hover:text-slate-600 border-transparent'}`}
                >
                   {tab}
                </button>

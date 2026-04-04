@@ -43,7 +43,7 @@ export default function CreatorProfilePage({ params }: { params: Promise<{ id: s
     <div className="flex min-h-screen bg-[#f6f4f1] w-full">
       <DashboardSidebar />
 
-      <main className="flex-1 flex flex-col pl-[240px] relative w-full overflow-x-hidden">
+      <main className="flex-1 flex flex-col md:pl-[240px] pt-20 md:pt-0 relative w-full overflow-x-hidden">
         <ProfileBanner bannerUrl={creator.banner || '/assets/creator/banner.png'} />
 
         <div className="relative px-[42px] pt-[92px] pb-[64px] flex flex-col w-full max-w-[1400px]">

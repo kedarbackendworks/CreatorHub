@@ -81,10 +81,10 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="flex bg-[#f9f9f9] min-h-screen font-sans">
+   <div className="flex flex-col xl:flex-row bg-[#f9f9f9] min-h-screen font-sans">
       
       {/* Left Form Column */}
-      <div className="flex-1 p-12 max-w-5xl border-r border-slate-200/60 overflow-y-auto">
+      <div className="flex-1 p-4 sm:p-6 lg:p-12 max-w-5xl border-r border-slate-200/60 overflow-y-auto">
          <header className="mb-12">
             <h1 className="text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Create a post</h1>
             <p className="text-2xl font-bold text-slate-600 tracking-tight leading-tight">Share new content, set pricing, and publish it for your audience.</p>
@@ -214,7 +214,7 @@ export default function CreatePostPage() {
       </div>
 
       {/* Right Sidebar */}
-      <aside className="w-[380px] p-8 bg-white overflow-y-auto shrink-0 border-l border-slate-200/60 h-screen sticky top-0 shadow-sm">
+      <aside className="hidden xl:block w-[380px] p-8 bg-white overflow-y-auto shrink-0 border-l border-slate-200/60 h-screen sticky top-0 shadow-sm">
          
          <div className="flex gap-3 mb-10">
             <button onClick={() => setPreviewOpen(true)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 text-xs font-bold rounded-full hover:bg-slate-50 transition-colors shadow-sm">

@@ -78,20 +78,20 @@ export default function ContentLibraryPage() {
   };
 
   return (
-    <div className="p-12 max-w-7xl w-full mx-auto font-sans bg-[#f9f9f9] min-h-screen" onClick={() => setActiveMenu(null)}>
+    <div className="p-4 sm:p-6 md:p-12 max-w-7xl w-full mx-auto font-sans bg-[#f9f9f9] min-h-screen" onClick={() => setActiveMenu(null)}>
       
-      <header className="mb-10">
-        <h1 className="text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Content Library</h1>
-        <p className="text-2xl font-bold text-slate-600 tracking-tight leading-tight">Manage your published, draft, and scheduled posts in one place.</p>
+      <header className="mb-8 md:mb-10">
+        <h1 className="text-[40px] sm:text-[44px] font-bold text-[#1c1917] tracking-tight mb-2">Library</h1>
+        <p className="text-[20px] sm:text-2xl font-bold text-slate-600 tracking-tight leading-tight">Manage your published, draft, and scheduled posts in one place.</p>
       </header>
 
       {/* Tabs */}
-      <div className="flex gap-8 border-b border-slate-200/60 mb-8">
+      <div className="flex gap-6 sm:gap-8 border-b border-slate-200/60 mb-8 overflow-x-auto hide-scrollbar">
         {['Published', 'Scheduled', 'Drafts'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`text-[15px] font-bold pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-rose-500 border-rose-500' : 'text-slate-400 hover:text-slate-600 border-transparent'}`}
+            className={`shrink-0 text-[14px] sm:text-[15px] font-bold pb-4 border-b-2 transition-all duration-200 ${activeTab === tab ? 'text-rose-500 border-rose-500' : 'text-slate-400 hover:text-slate-600 border-transparent'}`}
           >
             {tab}
           </button>
@@ -101,7 +101,30 @@ export default function ContentLibraryPage() {
       {loading ? (
         <div className="py-20 text-center text-slate-400 font-bold">Loading your library...</div>
       ) : (
-        <div className="bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
+        <>
+        <div className="md:hidden space-y-3">
+          {filteredPosts.map((item: any) => (
+            <div key={item._id} className="bg-white border border-slate-200 rounded-2xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-12 flex items-center justify-center bg-slate-50 rounded-xl border border-slate-200 shadow-sm shrink-0 overflow-hidden">
+                  {item.mediaType === 'file' ? (
+                    <div className="text-2xl">📄</div>
+                  ) : (
+                    <img src={item.thumbnailUrl || item.mediaUrl || 'https://via.placeholder.com/100'} alt="Post" className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-bold text-[#1c1917] truncate">{item.title}</p>
+                  <p className="text-[12px] text-slate-500">{new Date(item.createdAt).toLocaleDateString()} • {item.mediaType}</p>
+                  <p className="text-[12px] font-semibold text-slate-600 mt-1">{item.isExclusive ? 'Paid' : 'Public'} • ${item.price || 0}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+          {filteredPosts.length === 0 && <div className="py-14 text-center font-bold text-slate-400">No content found in this category.</div>}
+        </div>
+
+        <div className="hidden md:block bg-white border border-slate-200 rounded-[32px] overflow-hidden shadow-sm">
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#fafaf9] border-b border-slate-200">
               <tr>
@@ -177,6 +200,7 @@ export default function ContentLibraryPage() {
           </table>
           {filteredPosts.length === 0 && <div className="py-20 text-center font-bold text-slate-400">No content found in this category.</div>}
         </div>
+        </>
       )}
 
       {/* Edit Modal */}
