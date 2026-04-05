@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Upload, Link as LinkIcon, Paperclip, X, Eye, Save, Globe, Lock, Shield, User, Clock, Bell, Mail, MessageSquare, Plus, Smartphone, Monitor, ChevronDown, Heart, Diamond, Zap, Trash2, FileText, LayoutTemplate } from 'lucide-react';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
@@ -18,7 +18,32 @@ export default function CreatePostPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [linkUrl, setLinkUrl] = useState('');
    const [sellingPrice, setSellingPrice] = useState('');
+   const [contentLockEnabled, setContentLockEnabled] = useState<boolean | null>(null);
   const [publishing, setPublishing] = useState(false);
+
+   useEffect(() => {
+      let mounted = true;
+
+      api.get('/creator/features')
+         .then((res) => {
+            if (!mounted) return;
+            setContentLockEnabled(res?.data?.toggles?.contentLock !== false);
+         })
+         .catch(() => {
+            if (mounted) setContentLockEnabled(true);
+         });
+
+      return () => {
+         mounted = false;
+      };
+   }, []);
+
+   useEffect(() => {
+      if (contentLockEnabled === false && audience === 'exclusive_paid') {
+         setAudience('everyone');
+         setSellingPrice('');
+      }
+   }, [contentLockEnabled, audience]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -37,6 +62,11 @@ export default function CreatePostPage() {
       toast.error("Title and description are required");
       return;
     }
+
+      if (audience === 'exclusive_paid' && contentLockEnabled === false) {
+         toast.error('Paid Content Lock is currently disabled by platform settings');
+         return;
+      }
 
       if (audience === 'exclusive_paid' && (!sellingPrice || Number(sellingPrice) <= 0)) {
          toast.error('Enter a valid selling price for exclusive content');
@@ -243,22 +273,38 @@ export default function CreatePostPage() {
                               { id: 'everyone', label: 'Everyone', desc: 'Free to access for all users' },
                               { id: 'members_only', label: 'Members only', desc: 'Only paid channel members can access' },
                               { id: 'exclusive_paid', label: 'Exclusive content', desc: 'All users must pay separately to access' }
-                  ].map((opt) => (
+                           ].map((opt) => {
+                              const isContentLockOption = opt.id === 'exclusive_paid';
+                              const isOptionDisabled = isContentLockOption && contentLockEnabled === false;
+
+                              return (
                     <div 
                       key={opt.id} 
-                                 onClick={() => setAudience(opt.id as 'everyone' | 'members_only' | 'exclusive_paid')}
-                      className={`flex items-start gap-4 p-4.5 rounded-2xl border cursor-pointer transition-all ${audience === opt.id ? 'border-rose-500 bg-rose-50/20' : 'border-slate-100 bg-[#fbfbfb] hover:bg-slate-50'}`}
+                                                 onClick={() => {
+                                                    if (isOptionDisabled) return;
+                                                    setAudience(opt.id as 'everyone' | 'members_only' | 'exclusive_paid');
+                                                 }}
+                                 className={`flex items-start gap-4 p-4.5 rounded-2xl border transition-all ${isOptionDisabled ? 'cursor-not-allowed opacity-50 border-slate-100 bg-[#fbfbfb]' : 'cursor-pointer'} ${audience === opt.id && !isOptionDisabled ? 'border-rose-500 bg-rose-50/20' : 'border-slate-100 bg-[#fbfbfb] hover:bg-slate-50'}`}
                     >
                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 shrink-0 ${audience === opt.id ? 'border-rose-500' : 'border-slate-300'}`}>
                           {audience === opt.id && <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>}
                        </div>
                        <div>
                           <p className="text-[13px] font-bold text-[#111827]">{opt.label}</p>
-                          <p className="text-[11px] font-medium text-slate-400">{opt.desc}</p>
+                                       <p className="text-[11px] font-medium text-slate-400">
+                                          {isOptionDisabled ? 'Temporarily unavailable by admin setting' : opt.desc}
+                                       </p>
                        </div>
                     </div>
-                  ))}
+                           );
+                           })}
                </div>
+
+                      {contentLockEnabled === false ? (
+                         <p className="mt-3 text-[11px] font-bold text-rose-400">
+                            Paid Content Lock is currently disabled. One-time purchase posts are unavailable.
+                         </p>
+                      ) : null}
                
                <div className="mt-5">
                   <div className="relative">
@@ -269,8 +315,8 @@ export default function CreatePostPage() {
                                  step="0.01"
                                  value={sellingPrice}
                                  onChange={(e) => setSellingPrice(e.target.value)}
-                                 disabled={audience !== 'exclusive_paid'}
-                                 placeholder={audience === 'exclusive_paid' ? 'Enter selling price' : 'Price enabled for Exclusive content'}
+                                                 disabled={audience !== 'exclusive_paid' || contentLockEnabled === false}
+                                                 placeholder={contentLockEnabled === false ? 'Disabled by admin setting' : audience === 'exclusive_paid' ? 'Enter selling price' : 'Price enabled for Exclusive content'}
                                  className="w-full bg-[#fcfcfc] border border-slate-100 rounded-xl pl-10 pr-4 py-3.5 text-[14px] font-bold text-[#111827] focus:outline-none focus:ring-1 focus:ring-rose-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                               />
                   </div>

@@ -12,6 +12,8 @@ interface PostHeroImageProps {
   price?: number;
   hasAccess?: boolean;
   onUnlockClick?: () => void;
+  unlockDisabled?: boolean;
+  unlockDisabledReason?: string;
   targetId?: string;
   targetType?: 'post' | 'user' | 'dm';
   showReportButton?: boolean;
@@ -26,6 +28,8 @@ export default function PostHeroImage({
   price = 0,
   hasAccess = true,
   onUnlockClick,
+  unlockDisabled = false,
+  unlockDisabledReason,
   targetId,
   targetType = 'post',
   showReportButton = false,
@@ -86,7 +90,7 @@ export default function PostHeroImage({
           </h3>
           <p className="text-white/90 font-['Figtree',sans-serif] text-sm mb-6 max-w-[300px] drop-shadow-sm">
             {accessTier === 'exclusive_paid'
-              ? `Purchase this post for $${Number(price || 0).toFixed(2)} to unlock access.`
+              ? (unlockDisabledReason || `Purchase this post for $${Number(price || 0).toFixed(2)} to unlock access.`)
               : "Join the creator's membership to unlock this post and all other premium content."}
           </p>
           <button 
@@ -94,9 +98,12 @@ export default function PostHeroImage({
               e.stopPropagation();
               onUnlockClick?.();
             }}
-            className="bg-[#f95c4b] hover:bg-[#ff7a6c] text-white px-8 py-3 rounded-full font-bold text-[14px] shadow-lg transition-all active:scale-95 border border-white/20"
+            disabled={unlockDisabled}
+            className={`bg-[#f95c4b] text-white px-8 py-3 rounded-full font-bold text-[14px] shadow-lg transition-all active:scale-95 border border-white/20 ${unlockDisabled ? 'opacity-60 cursor-not-allowed' : 'hover:bg-[#ff7a6c]'}`}
           >
-            {accessTier === 'exclusive_paid' ? `Buy for $${Number(price || 0).toFixed(2)}` : 'Join Membership to Unlock'}
+            {accessTier === 'exclusive_paid'
+              ? (unlockDisabled ? 'Currently Unavailable' : `Buy for $${Number(price || 0).toFixed(2)}`)
+              : 'Join Membership to Unlock'}
           </button>
         </div>
       )}

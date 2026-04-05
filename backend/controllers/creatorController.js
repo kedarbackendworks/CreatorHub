@@ -12,6 +12,26 @@ const Block = require('../models/Block');
 const Review = require('../models/Review');
 const { AppSetting } = require('../models/AdminData');
 
+const DEFAULT_TOGGLES = {
+  livestreaming: true,
+  messaging: true,
+  tips: true,
+  contentLock: false,
+  community: true
+};
+
+const isFeatureEnabled = async (featureName) => {
+  const settings = await AppSetting.findOne().lean();
+
+  const toggles = {
+    ...DEFAULT_TOGGLES,
+    ...(settings?.toggles || {})
+  };
+
+  const value = toggles[featureName];
+  return !(value === false || value === 'false');
+};
+
 // --- Dashboard ---
 const getDashboardData = async (req, res) => {
   try {
@@ -285,6 +305,17 @@ const createPost = async (req, res) => {
       const normalizedAccessTier = ['everyone', 'members_only', 'exclusive_paid'].includes(accessTier)
         ? accessTier
         : (isExclusive === 'true' || isExclusive === true ? 'members_only' : 'everyone');
+
+      if (normalizedAccessTier === 'exclusive_paid') {
+        const contentLockEnabled = await isFeatureEnabled('contentLock');
+        if (!contentLockEnabled) {
+          return res.status(403).json({
+            error: 'FeatureDisabled',
+            message: 'Paid Content Lock is currently disabled by the administrator.'
+          });
+        }
+      }
+
       const parsedPrice = parseFloat(price || 0);
       const resolvedPrice = normalizedAccessTier === 'exclusive_paid' ? Math.max(parsedPrice, 0) : 0;
       
@@ -351,6 +382,20 @@ const updatePost = async (req, res) => {
 
         if (!updateData.accessTier && updateData.isExclusive !== undefined) {
           updateData.accessTier = updateData.isExclusive ? 'members_only' : 'everyone';
+        }
+
+        const requestedAccessTier = updateData.accessTier !== undefined
+          ? updateData.accessTier
+          : undefined;
+
+        if (requestedAccessTier === 'exclusive_paid') {
+          const contentLockEnabled = await isFeatureEnabled('contentLock');
+          if (!contentLockEnabled) {
+            return res.status(403).json({
+              error: 'FeatureDisabled',
+              message: 'Paid Content Lock is currently disabled by the administrator.'
+            });
+          }
         }
 
         if (updateData.accessTier === 'everyone' || updateData.accessTier === 'members_only') {

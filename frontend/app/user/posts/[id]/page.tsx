@@ -19,6 +19,7 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
   const [loading, setLoading] = useState(true);
   const [unavailableMessage, setUnavailableMessage] = useState('');
   const [isMemModalOpen, setIsMemModalOpen] = useState(false);
+  const [contentLockEnabled, setContentLockEnabled] = useState<boolean | null>(null);
 
   const handleFavoriteToggle = async () => {
     try {
@@ -47,6 +48,23 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
     fetchPost();
   }, [id]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    api.get('/user/features')
+      .then((res) => {
+        if (!mounted) return;
+        setContentLockEnabled(res?.data?.toggles?.contentLock !== false);
+      })
+      .catch(() => {
+        if (mounted) setContentLockEnabled(true);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const handleUnlockSuccess = () => {
     // Re-fetch post to update access status
     const fetchPost = async () => {
@@ -65,6 +83,11 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
     }
 
     if (post.accessTier === 'exclusive_paid') {
+      if (contentLockEnabled === false) {
+        toast.error('Paid content purchases are currently unavailable by platform settings');
+        return;
+      }
+
       const creatorNameForPrompt = post.creatorId?.name || 'this creator';
       const message = `Do you want to purchase ${creatorNameForPrompt} exclusive content?`;
       const accepted = window.confirm(message);
@@ -75,7 +98,12 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
         toast.success('Exclusive content unlocked successfully');
         handleUnlockSuccess();
       } catch (err: any) {
-        toast.error(err?.response?.data?.message || 'Unable to purchase exclusive content');
+        if (err?.response?.status === 403 && err?.response?.data?.error === 'FeatureDisabled') {
+          setContentLockEnabled(false);
+          toast.error('Paid content purchases are currently unavailable by platform settings');
+        } else {
+          toast.error(err?.response?.data?.message || 'Unable to purchase exclusive content');
+        }
       }
     }
   };
@@ -119,6 +147,8 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
             accessTier={post.accessTier}
             price={post.price}
             hasAccess={post.hasAccess}
+            unlockDisabled={post.accessTier === 'exclusive_paid' && contentLockEnabled === false}
+            unlockDisabledReason={post.accessTier === 'exclusive_paid' && contentLockEnabled === false ? 'Paid content purchases are temporarily unavailable by platform settings.' : undefined}
             onUnlockClick={handleUnlockClick}
             targetId={post._id}
             targetType="post"
@@ -141,7 +171,9 @@ export default function UserPostDetailPage({ params }: { params: Promise<{ id: s
               post.hasAccess
                 ? post.description
                 : post.accessTier === 'exclusive_paid'
-                  ? 'This is exclusive paid content. Purchase to unlock and view the full post.'
+                  ? (contentLockEnabled === false
+                      ? 'This paid post is temporarily unavailable because one-time purchase access is disabled by the platform administrator.'
+                      : 'This is exclusive paid content. Purchase to unlock and view the full post.')
                   : 'This content is available to members only. Join membership to unlock.'
             }
           />
