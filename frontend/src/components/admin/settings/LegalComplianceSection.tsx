@@ -3,7 +3,12 @@
 import React from 'react';
 import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 
-export function LegalComplianceSection() {
+interface Props {
+  settings: any;
+  onChange: (key: string, value: any) => void;
+}
+
+export function LegalComplianceSection({ settings, onChange }: Props) {
   return (
     <div className="mb-12">
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#4B5563', marginBottom: 20 }}>
@@ -16,13 +21,14 @@ export function LegalComplianceSection() {
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Terms of Service</label>
           <div style={editorContainerStyle}>
             <div style={editorToolbarStyle}>
-              <button style={toolbarIconStyle}><Bold size={14} /></button>
-              <button style={toolbarIconStyle}><Italic size={14} /></button>
-              <button style={toolbarIconStyle}><LinkIcon size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><Bold size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><Italic size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><LinkIcon size={14} /></button>
             </div>
             <textarea
               style={textareaStyle}
-              defaultValue={"## Platform Usage Rules\n1. Users must be 18+...\n2. All content must comply with global standards..."}
+              value={settings.termsOfService}
+              onChange={(e) => onChange('termsOfService', e.target.value)}
             />
           </div>
         </div>
@@ -32,13 +38,14 @@ export function LegalComplianceSection() {
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Privacy Policy</label>
           <div style={editorContainerStyle}>
             <div style={editorToolbarStyle}>
-              <button style={toolbarIconStyle}><Bold size={14} /></button>
-              <button style={toolbarIconStyle}><Italic size={14} /></button>
-              <button style={toolbarIconStyle}><LinkIcon size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><Bold size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><Italic size={14} /></button>
+              <button type="button" style={toolbarIconStyle}><LinkIcon size={14} /></button>
             </div>
             <textarea
               style={textareaStyle}
-              defaultValue={"## Data Privacy\nWe value your data security. This document outlines how we process information..."}
+              value={settings.privacyPolicy}
+              onChange={(e) => onChange('privacyPolicy', e.target.value)}
             />
           </div>
         </div>

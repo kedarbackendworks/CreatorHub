@@ -2,7 +2,13 @@
 
 import React from 'react';
 
-export function SettingsHeader() {
+interface Props {
+  onSave: () => void;
+  onReset: () => void;
+  isSaving: boolean;
+}
+
+export function SettingsHeader({ onSave, onReset, isSaving }: Props) {
   return (
     <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
       <div>
@@ -16,6 +22,7 @@ export function SettingsHeader() {
       
       <div className="flex items-center gap-3">
         <button
+          onClick={onReset}
           style={{
             padding: '10px 16px',
             background: 'white',
@@ -31,6 +38,8 @@ export function SettingsHeader() {
           Reset to Default
         </button>
         <button
+          onClick={onSave}
+          disabled={isSaving}
           style={{
             padding: '10px 16px',
             background: '#111827',
@@ -41,9 +50,10 @@ export function SettingsHeader() {
             fontWeight: 700,
             cursor: 'pointer',
             transition: 'all 0.15s ease',
+            opacity: isSaving ? 0.7 : 1,
           }}
         >
-          Save Changes
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>

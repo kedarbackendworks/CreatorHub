@@ -2,7 +2,12 @@
 
 import React from 'react';
 
-export function GeneralSettingsSection() {
+interface Props {
+  settings: any;
+  onChange: (key: string, value: any) => void;
+}
+
+export function GeneralSettingsSection({ settings, onChange }: Props) {
   return (
     <div className="mb-12">
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#4B5563', marginBottom: 20 }}>
@@ -15,7 +20,8 @@ export function GeneralSettingsSection() {
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Platform Name</label>
           <input
             type="text"
-            defaultValue="Nexus Enterprise"
+            value={settings.platformName}
+            onChange={(e) => onChange('platformName', e.target.value)}
             style={inputStyle}
           />
         </div>
@@ -25,7 +31,8 @@ export function GeneralSettingsSection() {
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Platform URL</label>
           <input
             type="text"
-            defaultValue="https://admin.nexus-ent.com"
+            value={settings.platformUrl}
+            onChange={(e) => onChange('platformUrl', e.target.value)}
             style={inputStyle}
           />
         </div>
@@ -34,10 +41,15 @@ export function GeneralSettingsSection() {
         <div className="flex flex-col gap-2">
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Default Language</label>
           <div className="relative">
-            <select style={selectStyle}>
+            <select
+              value={settings.defaultLanguage}
+              onChange={(e) => onChange('defaultLanguage', e.target.value)}
+              style={selectStyle}
+            >
               <option>English (US)</option>
               <option>English (UK)</option>
               <option>Spanish</option>
+              <option>Hindi</option>
             </select>
             {/* Custom dropdown arrow */}
             <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
@@ -50,10 +62,15 @@ export function GeneralSettingsSection() {
         <div className="flex flex-col gap-2">
           <label style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>Timezone</label>
           <div className="relative">
-            <select style={selectStyle}>
+            <select
+              value={settings.timezone}
+              onChange={(e) => onChange('timezone', e.target.value)}
+              style={selectStyle}
+            >
               <option>(GMT+05:30) India Standard Time</option>
               <option>(GMT+00:00) UTC</option>
               <option>(GMT-08:00) Pacific Time</option>
+              <option>(GMT+01:00) Central European Time</option>
             </select>
             <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>

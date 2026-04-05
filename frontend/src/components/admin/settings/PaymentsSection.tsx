@@ -3,7 +3,12 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 
-export function PaymentsSection() {
+interface Props {
+  settings: any;
+  onChange: (key: string, value: any) => void;
+}
+
+export function PaymentsSection({ settings, onChange }: Props) {
   return (
     <div className="mb-12">
       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#4B5563', marginBottom: 20 }}>
@@ -18,10 +23,17 @@ export function PaymentsSection() {
             <div style={iconBoxStyle}>RP</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2 }}>Razorpay</p>
-              <p style={{ fontSize: 11, fontWeight: 600, color: '#10B981' }}>Connected</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: settings.razorpayConnected ? '#10B981' : '#6B7280' }}>
+                {settings.razorpayConnected ? 'Connected' : 'Disconnected'}
+              </p>
             </div>
           </div>
-          <button style={{ ...connectBtnStyle, color: '#9CA3AF' }}>Connect</button>
+          <button
+            onClick={() => onChange('razorpayConnected', !settings.razorpayConnected)}
+            style={{ ...connectBtnStyle, color: settings.razorpayConnected ? '#EF4444' : '#111827' }}
+          >
+            {settings.razorpayConnected ? 'Disconnect' : 'Connect'}
+          </button>
         </div>
 
         {/* Stripe */}
@@ -30,10 +42,17 @@ export function PaymentsSection() {
             <div style={iconBoxStyle}>ST</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: '#111827', marginBottom: 2 }}>Stripe</p>
-              <p style={{ fontSize: 11, fontWeight: 500, color: '#6B7280' }}>Disconnected</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: settings.stripeConnected ? '#10B981' : '#6B7280' }}>
+                {settings.stripeConnected ? 'Connected' : 'Disconnected'}
+              </p>
             </div>
           </div>
-          <button style={{ ...connectBtnStyle, color: '#111827' }}>Connect</button>
+          <button
+            onClick={() => onChange('stripeConnected', !settings.stripeConnected)}
+            style={{ ...connectBtnStyle, color: settings.stripeConnected ? '#EF4444' : '#111827' }}
+          >
+            {settings.stripeConnected ? 'Disconnect' : 'Connect'}
+          </button>
         </div>
       </div>
 
@@ -45,8 +64,9 @@ export function PaymentsSection() {
           </label>
           <div style={{ display: 'flex', width: '100%' }}>
             <input
-              type="text"
-              defaultValue="10"
+              type="number"
+              value={settings.commission}
+              onChange={(e) => onChange('commission', Number(e.target.value))}
               style={{ ...paymentInputStyle, borderRadius: '8px 0 0 8px', borderRight: 'none', flex: 1 }}
             />
             <div
@@ -76,11 +96,12 @@ export function PaymentsSection() {
 
         <div>
           <label style={{ fontSize: 10, fontWeight: 800, color: '#6B7280', letterSpacing: '0.05em', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>
-            Minimum Payout
+            Minimum Payout (₹)
           </label>
           <input
-            type="text"
-            defaultValue="₹1000"
+            type="number"
+            value={settings.minPayout}
+            onChange={(e) => onChange('minPayout', Number(e.target.value))}
             style={{ ...paymentInputStyle, width: '100%', borderRadius: 8 }}
           />
         </div>

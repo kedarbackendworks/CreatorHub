@@ -13,6 +13,72 @@ const { checkFlagged } = require('../../frontend/Moderation/services/flaggedIden
 // Helper: Generate 6-digit OTP
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+
+  if (typeof forwarded === 'string' && forwarded.trim()) {
+    return forwarded.split(',')[0].trim();
+  }
+
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return String(forwarded[0]);
+  }
+
+  return req.ip || req.socket?.remoteAddress || 'Unknown';
+};
+
+const parseUserAgent = (uaRaw) => {
+  const ua = String(uaRaw || '');
+  const lower = ua.toLowerCase();
+
+  let browser = 'Unknown Browser';
+  if (lower.includes('edg/')) browser = 'Edge';
+  else if (lower.includes('opr/') || lower.includes('opera')) browser = 'Opera';
+  else if (lower.includes('chrome/')) browser = 'Chrome';
+  else if (lower.includes('safari/') && !lower.includes('chrome/')) browser = 'Safari';
+  else if (lower.includes('firefox/')) browser = 'Firefox';
+  else if (lower.includes('msie') || lower.includes('trident/')) browser = 'Internet Explorer';
+
+  let os = 'Unknown OS';
+  if (lower.includes('windows')) os = 'Windows';
+  else if (lower.includes('android')) os = 'Android';
+  else if (lower.includes('iphone') || lower.includes('ipad') || lower.includes('ios')) os = 'iOS';
+  else if (lower.includes('mac os') || lower.includes('macintosh')) os = 'macOS';
+  else if (lower.includes('linux')) os = 'Linux';
+
+  return { browser, os };
+};
+
+const issueSessionToken = async (user, req) => {
+  const sessionId = crypto.randomUUID();
+  const userAgent = req.headers['user-agent'] || '';
+  const { browser, os } = parseUserAgent(userAgent);
+  const ipAddress = getClientIp(req);
+
+  if (!Array.isArray(user.sessions)) {
+    user.sessions = [];
+  }
+
+  user.sessions.push({
+    sessionId,
+    userAgent,
+    browser,
+    os,
+    ipAddress,
+    createdAt: new Date()
+  });
+
+  // Keep only the latest 20 sessions to prevent unbounded growth.
+  if (user.sessions.length > 20) {
+    user.sessions = user.sessions.slice(-20);
+  }
+
+  user.lastLogin = new Date();
+  await user.save({ validateBeforeSave: false });
+
+  return generateToken(user._id, sessionId);
+};
+
 // Helper: Send OTP email
 const sendOtpEmail = async (email, otp) => {
   const transporter = nodemailer.createTransport({
@@ -108,6 +174,7 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.matchPassword(password))) {
+      const token = await issueSessionToken(user, req);
       res.json({
         _id: user._id,
         name: user.name,
@@ -115,7 +182,7 @@ const loginUser = async (req, res) => {
         role: user.role,
         avatar: user.avatar,
         countryOfResidence: user.countryOfResidence,
-        token: generateToken(user._id),
+        token,
       });
       return;
     }
@@ -166,6 +233,8 @@ const loginUser = async (req, res) => {
       await linkedUser.save();
     }
 
+    const token = await issueSessionToken(linkedUser, req);
+
     return res.json({
       _id: linkedUser._id,
       name: linkedUser.name,
@@ -173,7 +242,7 @@ const loginUser = async (req, res) => {
       role: linkedUser.role,
       avatar: linkedUser.avatar,
       countryOfResidence: linkedUser.countryOfResidence,
-      token: generateToken(linkedUser._id),
+      token,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -378,7 +447,7 @@ const verifyOtp = async (req, res) => {
       }
     }
 
-    const token = generateToken(user._id);
+    const token = await issueSessionToken(user, req);
 
     res.json({
       success: true,
@@ -430,7 +499,7 @@ const setRole = async (req, res) => {
       }
     }
 
-    const token = generateToken(user._id);
+    const token = await issueSessionToken(user, req);
 
     res.json({
       success: true,

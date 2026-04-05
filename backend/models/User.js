@@ -19,6 +19,14 @@ const userSchema = mongoose.Schema(
     favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Post' }],
     memberships: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Creator' }],
     lastLogin: { type: Date, default: Date.now },
+    sessions: [{
+      sessionId: { type: String, required: true },
+      userAgent: { type: String, default: '' },
+      browser: { type: String, default: 'Unknown Browser' },
+      os: { type: String, default: 'Unknown OS' },
+      ipAddress: { type: String, default: 'Unknown' },
+      createdAt: { type: Date, default: Date.now }
+    }],
     otp: { type: String },
     otpExpires: { type: Date },
   },

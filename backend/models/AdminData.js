@@ -47,18 +47,40 @@ const AppTicket = mongoose.model('AppTicket', appTicketSchema);
 
 // Settings Model
 const appSettingSchema = new mongoose.Schema({
-  platformName: String,
-  commission: Number,
-  transactionFee: Number,
-  minPayout: Number,
-  currency: String,
+  // General
+  platformName: { type: String, default: 'Nexus Enterprise' },
+  platformUrl: { type: String, default: 'https://admin.nexus-ent.com' },
+  defaultLanguage: { type: String, default: 'English (US)' },
+  timezone: { type: String, default: '(GMT+05:30) India Standard Time' },
+
+  // Legal
+  termsOfService: { type: String, default: '## Platform Usage Rules\n1. Users must be 18+...\n2. All content must comply with global standards...' },
+  privacyPolicy: { type: String, default: '## Data Privacy\nWe value your data security. This document outlines how we process information...' },
+
+  // Payments
+  commission: { type: Number, default: 10 },
+  transactionFee: { type: Number, default: 2 },
+  minPayout: { type: Number, default: 1000 },
+  currency: { type: String, default: 'INR' },
+  razorpayConnected: { type: Boolean, default: false },
+  stripeConnected: { type: Boolean, default: false },
+
+  // Security
+  twoFactorEnabled: { type: Boolean, default: true },
+  botProtectionEnabled: { type: Boolean, default: false },
+  sessionTimeout: { type: String, default: '30 Minutes' },
+  minPasswordLength: { type: Number, default: 12 },
+
+  // Feature Toggles (existing)
   toggles: {
-    livestreaming: Boolean,
-    messaging: Boolean,
-    tips: Boolean,
-    contentLock: Boolean,
-    community: Boolean
+    livestreaming: { type: Boolean, default: true },
+    messaging: { type: Boolean, default: true },
+    tips: { type: Boolean, default: true },
+    contentLock: { type: Boolean, default: false },
+    community: { type: Boolean, default: true }
   },
+
+  // Subscription Plans (existing)
   subscriptionPlans: [{
     id: String,
     tierName: String,

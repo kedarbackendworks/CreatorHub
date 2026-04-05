@@ -171,6 +171,152 @@ exports.updateSettings = async (req, res) => {
   }
 };
 
+exports.getSettings = async (req, res) => {
+  try {
+    let settings = await AppSetting.findOne();
+    if (!settings) {
+      settings = new AppSetting();
+      await settings.save();
+    }
+    res.status(200).json(settings.toObject());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.saveSettings = async (req, res) => {
+  try {
+    const allowed = [
+      'platformName', 'platformUrl', 'defaultLanguage', 'timezone',
+      'termsOfService', 'privacyPolicy',
+      'commission', 'minPayout', 'currency', 'transactionFee',
+      'razorpayConnected', 'stripeConnected',
+      'twoFactorEnabled', 'botProtectionEnabled', 'sessionTimeout', 'minPasswordLength'
+    ];
+
+    const update = {};
+    allowed.forEach((key) => {
+      if (req.body[key] !== undefined) update[key] = req.body[key];
+    });
+
+    const settings = await AppSetting.findOneAndUpdate(
+      {},
+      { $set: update },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json(settings.toObject());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.resetSettings = async (req, res) => {
+  try {
+    const defaults = {
+      platformName: 'Nexus Enterprise',
+      platformUrl: 'https://admin.nexus-ent.com',
+      defaultLanguage: 'English (US)',
+      timezone: '(GMT+05:30) India Standard Time',
+      termsOfService: '## Platform Usage Rules\n1. Users must be 18+...\n2. All content must comply with global standards...',
+      privacyPolicy: '## Data Privacy\nWe value your data security. This document outlines how we process information...',
+      commission: 10,
+      transactionFee: 2,
+      minPayout: 1000,
+      currency: 'INR',
+      razorpayConnected: false,
+      stripeConnected: false,
+      twoFactorEnabled: true,
+      botProtectionEnabled: false,
+      sessionTimeout: '30 Minutes',
+      minPasswordLength: 12,
+    };
+
+    const settings = await AppSetting.findOneAndUpdate(
+      {},
+      { $set: defaults },
+      { new: true, upsert: true }
+    );
+
+    res.status(200).json(settings.toObject());
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getAdminSessions = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('sessions');
+    if (!user) {
+      return res.status(404).json({ message: 'Admin user not found' });
+    }
+
+    const sessions = [...(user.sessions || [])]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map((session) => ({
+        sessionId: session.sessionId,
+        browser: session.browser || 'Unknown Browser',
+        os: session.os || 'Unknown OS',
+        ipAddress: session.ipAddress || 'Unknown',
+        createdAt: session.createdAt,
+        isCurrent: session.sessionId === req.sessionId,
+      }));
+
+    res.status(200).json({ sessions });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.revokeAdminSession = async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    if (!sessionId) {
+      return res.status(400).json({ message: 'sessionId is required' });
+    }
+
+    if (sessionId === req.sessionId) {
+      return res.status(400).json({ message: 'Current session cannot be revoked from this action' });
+    }
+
+    const user = await User.findById(req.user._id).select('sessions');
+    if (!user) {
+      return res.status(404).json({ message: 'Admin user not found' });
+    }
+
+    const exists = (user.sessions || []).some((session) => session.sessionId === sessionId);
+    if (!exists) {
+      return res.status(404).json({ message: 'Session not found' });
+    }
+
+    user.sessions = (user.sessions || []).filter((session) => session.sessionId !== sessionId);
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({ message: 'Session revoked successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.revokeAllOtherAdminSessions = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select('sessions');
+    if (!user) {
+      return res.status(404).json({ message: 'Admin user not found' });
+    }
+
+    const beforeCount = (user.sessions || []).length;
+    user.sessions = (user.sessions || []).filter((session) => session.sessionId === req.sessionId);
+    const removedCount = beforeCount - user.sessions.length;
+
+    await user.save({ validateBeforeSave: false });
+
+    res.status(200).json({ message: 'Logged out all other sessions', removedCount });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.getUserDetails = async (req, res) => {
   try {
     const { id } = req.params;
