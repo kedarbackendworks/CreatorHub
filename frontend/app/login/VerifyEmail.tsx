@@ -5,6 +5,7 @@ import Image from "next/image";
 import { CheckCircle2, XCircle, AlertCircle, CheckCircle } from "lucide-react";
 import api from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/useAuthStore";
+import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
 
 export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: string }) {
   const [step, setStep] = useState<"EMAIL_INPUT" | "OTP_INPUT">(
@@ -16,6 +17,9 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
   const [isLoading, setIsLoading] = useState(false);
   const [cooldown, setCooldown] = useState(initialEmail ? 30 : 0);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
   
   const login = useAuthStore((state) => state.login);
   
@@ -48,19 +52,31 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
       return;
     }
 
+    if (captchaRequired && !captchaToken) {
+      showToast("Please complete the security check.", "error");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await api.post('/auth/request-otp', { email });
+      const res = await api.post('/auth/request-otp', { email, captchaToken });
       
       if (res.data.success) {
         showToast("OTP sent to your email!", "success");
         setStep("OTP_INPUT");
         setCooldown(30);
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
       } else {
         showToast(res.data.message || "Failed to send OTP", "error");
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || "Network error. Please try again.", "error");
+      const message = err.response?.data?.message || "Network error. Please try again.";
+      if (String(message).toLowerCase().includes('captcha')) {
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
+      }
+      showToast(message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -74,9 +90,14 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
       return;
     }
 
+    if (captchaRequired && !captchaToken) {
+      showToast("Please complete the security check.", "error");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const res = await api.post('/auth/verify-otp', { email, otp: otpString });
+      const res = await api.post('/auth/verify-otp', { email, otp: otpString, captchaToken });
       
       if (res.data.success) {
         // Store token and user data
@@ -89,6 +110,8 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
 
         // Show success popup for 1.75 seconds
         setShowSuccessPopup(true);
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
         setTimeout(() => {
           window.location.href = "/role-selection";
         }, 1750);
@@ -96,7 +119,12 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
         showToast(res.data.message || "Invalid or expired OTP", "error");
       }
     } catch (err: any) {
-      showToast(err.response?.data?.message || "Network error. Please try again.", "error");
+      const message = err.response?.data?.message || "Network error. Please try again.";
+      if (String(message).toLowerCase().includes('captcha')) {
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
+      }
+      showToast(message, "error");
     } finally {
       setIsLoading(false);
     }
@@ -219,6 +247,14 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
                   className="w-full bg-white border border-[#d8d1c7] rounded-[16px] px-6 py-5 outline-none focus:border-[#ff9465] transition-colors text-lg text-[#1a1a1a] font-medium placeholder:text-[#9a9a9a]"
                   style={{ fontFamily: "'Inter', sans-serif" }}
                 />
+
+                <div className="w-full">
+                  <CaptchaChallenge
+                    onTokenChange={setCaptchaToken}
+                    onRequirementChange={setCaptchaRequired}
+                    refreshNonce={captchaRefreshNonce}
+                  />
+                </div>
                 
                 <button
                   type="submit"
@@ -251,6 +287,14 @@ export default function VerifyEmail({ initialEmail = "" }: { initialEmail?: stri
                       maxLength={6}
                     />
                   ))}
+                </div>
+
+                <div className="w-full">
+                  <CaptchaChallenge
+                    onTokenChange={setCaptchaToken}
+                    onRequirementChange={setCaptchaRequired}
+                    refreshNonce={captchaRefreshNonce}
+                  />
                 </div>
 
                 <div className="w-full flex flex-col gap-6 items-center py-6 relative">

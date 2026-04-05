@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff, CheckCircle2, Circle } from "lucide-react";
 import api from "@/src/lib/api";
 import toast from "react-hot-toast";
+import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
 
 function SignUpForm() {
   const router = useRouter();
@@ -20,9 +21,18 @@ function SignUpForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (captchaRequired && !captchaToken) {
+      toast.error("Please complete the security check");
+      return;
+    }
+
     setLoading(true);
     try {
       let deviceFingerprint = '';
@@ -44,14 +54,22 @@ function SignUpForm() {
         password,
         role,
         deviceFingerprint,
+        captchaToken,
       });
       if (res.data.success) {
         toast.success("Account created! Check your email for OTP.");
+        setCaptchaToken("");
+        setCaptchaRefreshNonce((prev) => prev + 1);
         // Redirect to verify-email page with the email
         router.push(`/login/verify-email?email=${encodeURIComponent(email)}`);
       }
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      const message = err.response?.data?.message || "Registration failed";
+      if (String(message).toLowerCase().includes('captcha')) {
+        setCaptchaToken("");
+        setCaptchaRefreshNonce((prev) => prev + 1);
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -233,6 +251,13 @@ function SignUpForm() {
         </div>
 
         {/* Submit Button */}
+        <CaptchaChallenge
+          onTokenChange={setCaptchaToken}
+          onRequirementChange={setCaptchaRequired}
+          refreshNonce={captchaRefreshNonce}
+          className="mt-2"
+        />
+
         <div className="flex justify-center mt-4">
           <button
             type="submit"

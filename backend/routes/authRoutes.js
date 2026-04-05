@@ -12,14 +12,16 @@ const {
 	setRole,
 } = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const { getCaptchaConfig, requireCaptchaIfEnabled } = require('../middleware/captchaMiddleware');
 const { checkBan } = require('../../frontend/Moderation/middleware/checkBan.middleware');
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
-router.post('/request-otp', requestOtp);
-router.post('/verify-otp', verifyOtp);
+router.get('/captcha/config', getCaptchaConfig);
+router.post('/register', requireCaptchaIfEnabled('creating an account'), registerUser);
+router.post('/login', requireCaptchaIfEnabled('logging in'), loginUser);
+router.post('/forgot-password', requireCaptchaIfEnabled('requesting a password reset'), forgotPassword);
+router.post('/reset-password', requireCaptchaIfEnabled('resetting your password'), resetPassword);
+router.post('/request-otp', requireCaptchaIfEnabled('requesting an OTP'), requestOtp);
+router.post('/verify-otp', requireCaptchaIfEnabled('verifying OTP'), verifyOtp);
 router.patch('/set-role', protect, checkBan, setRole);
 router.get('/profile', protect, checkBan, getUserProfile);
 router.get('/conversation-key/:conversationId', protect, checkBan, getConversationKey);

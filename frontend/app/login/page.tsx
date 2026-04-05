@@ -8,6 +8,7 @@ import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import api from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/useAuthStore";
 import toast from "react-hot-toast";
+import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,23 +16,39 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
 
   const login = useAuthStore((state) => state.login);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (captchaRequired && !captchaToken) {
+      toast.error("Please complete the security check");
+      return;
+    }
+
     setLoading(true);
     try {
-        const res = await api.post('/auth/login', { email, password });
+        const res = await api.post('/auth/login', { email, password, captchaToken });
         login(res.data);
         toast.success(`Welcome back, ${res.data.name}!`);
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
         
         // RBAC Redirection
         if (res.data.role === 'creator') router.push('/creator');
         else if (res.data.role === 'admin') router.push('/admin');
         else router.push('/user');
     } catch (err: any) {
-        toast.error(err.response?.data?.message || "Login failed");
+        const message = err.response?.data?.message || "Login failed";
+        if (String(message).toLowerCase().includes('captcha')) {
+          setCaptchaToken('');
+          setCaptchaRefreshNonce((prev) => prev + 1);
+        }
+        toast.error(message);
     } finally {
         setLoading(false);
     }
@@ -94,6 +111,12 @@ export default function LoginPage() {
             </div>
 
             <div className="flex flex-col gap-4 mt-2">
+              <CaptchaChallenge
+                onTokenChange={setCaptchaToken}
+                onRequirementChange={setCaptchaRequired}
+                refreshNonce={captchaRefreshNonce}
+              />
+
               <button
                 type="submit"
                 disabled={loading}

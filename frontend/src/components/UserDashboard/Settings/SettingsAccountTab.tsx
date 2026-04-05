@@ -5,6 +5,7 @@ import { Camera, ChevronDown, Loader2 } from 'lucide-react';
 import api from '@/src/lib/api';
 import { useAuthStore } from '@/src/store/useAuthStore';
 import toast from 'react-hot-toast';
+import CaptchaChallenge from '@/src/components/common/CaptchaChallenge';
 
 const getInitials = (name?: string, email?: string) => {
   if (name && name.trim()) {
@@ -40,6 +41,9 @@ export default function SettingsAccountTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSendingReset, setIsSendingReset] = useState(false);
   const [resetCooldown, setResetCooldown] = useState(0);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaRequired, setCaptchaRequired] = useState(false);
+  const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -137,13 +141,25 @@ export default function SettingsAccountTab() {
       return;
     }
 
+    if (captchaRequired && !captchaToken) {
+      toast.error('Please complete the security check');
+      return;
+    }
+
     setIsSendingReset(true);
     setResetCooldown(60);
     try {
-      await api.post('/auth/forgot-password', { email: user.email });
+      await api.post('/auth/forgot-password', { email: user.email, captchaToken });
+      setCaptchaToken('');
+      setCaptchaRefreshNonce((prev) => prev + 1);
       toast.success('Password reset link sent to your email');
     } catch (error) {
-      toast.error(getErrorMessage(error, 'Failed to send password reset link'));
+      const message = getErrorMessage(error, 'Failed to send password reset link');
+      if (String(message).toLowerCase().includes('captcha')) {
+        setCaptchaToken('');
+        setCaptchaRefreshNonce((prev) => prev + 1);
+      }
+      toast.error(message);
     } finally {
       setIsSendingReset(false);
     }
@@ -258,6 +274,11 @@ export default function SettingsAccountTab() {
         <p className="font-[family-name:var(--font-figtree)] font-medium text-[14px] leading-[22px] text-[#757575]">
           If you have forgot password for your account and want to change it , click on this button to receive the recovery link in your email.
         </p>
+        <CaptchaChallenge
+          onTokenChange={setCaptchaToken}
+          onRequirementChange={setCaptchaRequired}
+          refreshNonce={captchaRefreshNonce}
+        />
         <button
           type="button"
           onClick={handleResetPassword}
