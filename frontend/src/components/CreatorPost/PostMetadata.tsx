@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 interface PostMetadataProps {
-  postId: string;
+  postId?: string;
   creatorName?: string;
   category?: string;
   price?: number;

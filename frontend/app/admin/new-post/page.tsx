@@ -75,15 +75,15 @@ export default function NewPost() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)]">
       <div>
-        <h2 className="text-3xl font-bold text-white tracking-tight">Create New Post</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Create New Post</h2>
         <p className="text-slate-400 mt-1">Share your latest content with your audience.</p>
       </div>
 
       <div className="bg-[#111827] border border-slate-800 rounded-2xl p-6 shadow-xl">
         {/* Post Type Selector */}
-        <div className="flex p-1 bg-slate-900 rounded-xl mb-8 w-max border border-slate-800">
+        <div className="flex flex-wrap p-1 bg-slate-900 rounded-xl mb-8 w-full sm:w-max border border-slate-800 gap-1">
           <button
             type="button"
             onClick={() => { setPostType('image'); handleRemoveFile(); }}

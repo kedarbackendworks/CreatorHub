@@ -42,10 +42,10 @@ export default function ManagePosts() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)]">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-white tracking-tight">Manage Posts</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Manage Posts</h2>
           <p className="text-slate-400 mt-1">Edit your content, track engagement, or delete posts.</p>
         </div>
 
@@ -58,7 +58,7 @@ export default function ManagePosts() {
             placeholder="Search posts..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="block w-full md:w-64 pl-10 pr-3 py-2 bg-[#111827] border border-slate-800 rounded-xl text-sm placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
+            className="block w-full sm:w-72 md:w-64 pl-10 pr-3 py-2 bg-[#111827] border border-slate-800 rounded-xl text-sm placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all shadow-sm"
           />
         </div>
       </div>

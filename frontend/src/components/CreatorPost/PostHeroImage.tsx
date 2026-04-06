@@ -1,7 +1,24 @@
+"use client";
+
 import Image from 'next/image';
 import { Lock } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ReportModal } from '@/Moderation/components/ReportModal';
+
+const DEFAULT_THUMBNAIL = '/assets/creator/thumbnail.png';
+const KNOWN_BROKEN_ASSETS = ['photo-1572044162444-ad60f128bde3', 'sample_video1.mp4'];
+
+const pickImageSource = (mediaType: 'image' | 'video', thumbnailUrl?: string, mediaUrl?: string) => {
+  const candidate = mediaType === 'video'
+    ? (thumbnailUrl || DEFAULT_THUMBNAIL)
+    : (thumbnailUrl || mediaUrl || DEFAULT_THUMBNAIL);
+
+  if (KNOWN_BROKEN_ASSETS.some((asset) => candidate.includes(asset))) {
+    return DEFAULT_THUMBNAIL;
+  }
+
+  return candidate;
+};
 
 interface PostHeroImageProps {
   mediaUrl?: string;
@@ -35,7 +52,12 @@ export default function PostHeroImage({
   showReportButton = false,
 }: PostHeroImageProps) {
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const [imageSrc, setImageSrc] = useState(() => pickImageSource(mediaType, thumbnailUrl, mediaUrl));
   const isLocked = isExclusive && !hasAccess;
+
+  useEffect(() => {
+    setImageSrc(pickImageSource(mediaType, thumbnailUrl, mediaUrl));
+  }, [mediaType, thumbnailUrl, mediaUrl]);
 
   const renderMedia = () => {
     if (mediaType === 'video' && !isLocked) {
@@ -51,9 +73,15 @@ export default function PostHeroImage({
 
     return (
       <Image 
-        src={thumbnailUrl || mediaUrl || "/assets/creator/thumbnail.png"} 
+        src={imageSrc}
         alt="Post Cover Image" 
         fill 
+        sizes="(max-width: 768px) 100vw, 1119px"
+        onError={() => {
+          if (imageSrc !== DEFAULT_THUMBNAIL) {
+            setImageSrc(DEFAULT_THUMBNAIL);
+          }
+        }}
         className={`object-cover transition-all duration-500 ${isLocked ? 'blur-[12px] scale-105 opacity-60' : 'opacity-80'}`} 
       />
     );

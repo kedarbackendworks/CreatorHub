@@ -38,18 +38,18 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
   };
 
   if (loading) {
-    return <div className="p-8 text-slate-500">Loading user profile...</div>;
+    return <div className="p-4 sm:p-6 lg:p-8 text-slate-500">Loading user profile...</div>;
   }
 
   if (!user) {
-    return <div className="p-8 text-slate-500">User not found.</div>;
+    return <div className="p-4 sm:p-6 lg:p-8 text-slate-500">User not found.</div>;
   }
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full bg-[#f8f9fa] min-h-[calc(100vh-64px)] font-sans">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full bg-[#f8f9fa] min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)] font-sans">
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 mb-6 text-sm font-semibold">
+      <div className="flex items-center gap-2 mb-6 text-xs sm:text-sm font-semibold">
         <a href="/admin/users" className="text-slate-500 hover:text-slate-800">Users</a>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         <span className="text-slate-800">{user.name}</span>
@@ -59,7 +59,7 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
 
         {/* Left Column */}
         <div className="w-full lg:w-80 flex flex-col gap-6">
-          <div className="bg-white border flex flex-col items-center border-slate-200 rounded-xl p-8 shadow-sm">
+          <div className="bg-white border flex flex-col items-center border-slate-200 rounded-xl p-5 sm:p-8 shadow-sm">
             <div className="relative mb-6">
               <img src={user.avatar || 'https://i.pravatar.cc/150'} alt="Avatar" className="w-24 h-24 rounded-full object-cover shadow-sm bg-slate-100" />
               <div className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${user.status === 'Active' ? 'bg-emerald-500' : 'bg-red-500'}`}></div>
@@ -83,7 +83,7 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
             </div>
           </div>
 
-          <div className="bg-white border flex flex-col items-stretch border-slate-200 rounded-xl p-6 shadow-sm">
+          <div className="bg-white border flex flex-col items-stretch border-slate-200 rounded-xl p-5 sm:p-6 shadow-sm">
             <h3 className="text-sm font-bold text-slate-800 mb-6">Account Actions</h3>
             <button className="w-full py-3 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 text-sm font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 mb-3">
               <Ban className="w-4 h-4" /> Suspend User
@@ -97,14 +97,14 @@ export default function UserDetailsPage({ params }: { params: { id: string } }) 
         {/* Right Column */}
         <div className="flex-1 bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col">
           {/* Tabs */}
-          <div className="flex px-8 pt-4 gap-8 text-sm font-bold border-b border-slate-200">
+          <div className="flex overflow-x-auto px-4 sm:px-8 pt-4 gap-6 sm:gap-8 text-sm font-bold border-b border-slate-200 whitespace-nowrap">
             <button className="text-slate-800 border-b-2 border-slate-800 pb-4">Activity Log</button>
             <button className="text-slate-400 hover:text-slate-600 pb-4 transition-colors">Transactions</button>
             <button className="text-slate-400 hover:text-slate-600 pb-4 transition-colors">Content</button>
           </div>
 
-          <div className="p-8">
-            <div className="flex justify-between items-center mb-8">
+          <div className="p-4 sm:p-8">
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-8">
               <h3 className="text-sm font-bold text-slate-800">Recent Activities</h3>
               <button className="flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-slate-800">
                 Export Log <Download className="w-4 h-4" />

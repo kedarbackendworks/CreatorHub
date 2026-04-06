@@ -85,7 +85,7 @@ export default function CreatorsPage() {
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 24, background: '#F5F5F8', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 'clamp(12px, 2.8vw, 24px)', background: '#F5F5F8', minHeight: 'calc(100vh - 56px)' }}>
         <CreatorsHeader />
 
         {/* Row 1: Total Creators + Active Creators */}

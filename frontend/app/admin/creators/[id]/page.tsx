@@ -30,7 +30,7 @@ export default function CreatorDetailPage() {
 
   if (!creator) {
     return (
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 24, background: '#F5F5F8', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 'clamp(12px, 2.8vw, 24px)', background: '#F5F5F8', minHeight: 'calc(100vh - 56px)' }}>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
         <div className="flex flex-col items-center justify-center gap-4" style={{ paddingTop: 120 }}>
@@ -61,7 +61,7 @@ export default function CreatorDetailPage() {
         .detail-animate.visible { animation: detailFadeUp 0.4s ease forwards; }
       `}</style>
 
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 24, background: '#F5F5F8', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 'clamp(12px, 2.8vw, 24px)', background: '#F5F5F8', minHeight: 'calc(100vh - 56px)' }}>
 
         {/* Back button */}
         <div className={`detail-animate mb-5 ${mounted ? 'visible' : ''}`} style={{ animationDelay: '0s' }}>

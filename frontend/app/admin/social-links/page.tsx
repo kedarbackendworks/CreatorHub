@@ -86,13 +86,13 @@ export default function SocialLinks() {
   ];
 
   if (loading) {
-    return <div className="p-8 max-w-5xl mx-auto flex justify-center items-center h-[50vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
+    return <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto flex justify-center items-center h-[50vh]"><Loader2 className="w-8 h-8 animate-spin text-indigo-500" /></div>;
   }
 
   return (
-    <div className="p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-8 animate-in fade-in zoom-in-95 duration-500 min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)]">
       <div>
-        <h2 className="text-3xl font-bold text-white tracking-tight">Social Links</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Social Links</h2>
         <p className="text-slate-400 mt-1">Connect your other platforms to cross-promote your content.</p>
       </div>
 

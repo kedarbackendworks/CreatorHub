@@ -69,15 +69,15 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full bg-[#f8f9fa] min-h-[calc(100vh-64px)] font-sans relative">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full bg-[#f8f9fa] min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)] font-sans relative">
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">User Management</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 tracking-tight">User Management</h2>
           <p className="text-sm font-medium text-slate-500 mt-1">Manage platform users, creators, and administrators.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
           <button className="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-sm hover:bg-slate-50">
             <Download className="w-4 h-4" /> Export
           </button>
@@ -91,12 +91,12 @@ export default function UsersPage() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm flex flex-col relative z-0">
 
         {/* Filters bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-4 border-b border-slate-100 gap-4">
-          <div className="flex items-center gap-6 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between p-4 border-b border-slate-100 gap-4">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 sm:gap-6 w-full md:w-auto">
             <button className="px-4 py-2 border border-slate-200 bg-white text-slate-700 text-sm font-semibold rounded-lg shadow-sm flex items-center justify-between hover:bg-slate-50">
               Bulk Actions <span className="text-[10px] text-slate-500 ml-2">▼</span>
             </button>
-            <div className="flex gap-6 text-sm font-semibold text-slate-700">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 text-sm font-semibold text-slate-700">
               <div className="cursor-pointer flex items-center gap-1">Role: <span className="font-normal text-slate-500">All Roles</span><span className="text-[10px]">▼</span></div>
               <div className="cursor-pointer flex items-center gap-1">Status: <span className="font-normal text-slate-500">Any Status</span><span className="text-[10px]">▼</span></div>
             </div>
@@ -176,8 +176,8 @@ export default function UsersPage() {
 
       {/* Edit User Modal Overlay */}
       {isEditModalOpen && currentUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-[480px] p-6 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto p-6 relative">
             <button
               onClick={() => setIsEditModalOpen(false)}
               className="absolute right-5 top-5 text-slate-400 hover:text-slate-600"

@@ -31,11 +31,11 @@ export interface ChatMessage {
 
 interface MessageBubbleProps {
   message: ChatMessage;
-  onDelete: (id: string, deleteType: 'for_me' | 'for_everyone') => void;
-  onEdit: (id: string, currentText: string) => void;
-  onReact: (id: string, emoji: string) => void;
-  onBlock: (userId: string) => void;
-  currentUserId: string;
+  onDelete?: (id: string, deleteType: 'for_me' | 'for_everyone') => void;
+  onEdit?: (id: string, currentText: string) => void;
+  onReact?: (id: string, emoji: string) => void;
+  onBlock?: (userId: string) => void;
+  currentUserId?: string;
   onRetry?: (message: ChatMessage) => void;
   onReply?: (message: ChatMessage) => void;
   onScrollToMessage?: (messageId: string) => void;
@@ -108,7 +108,7 @@ export default function MessageBubble({
   onEdit,
   onReact,
   onBlock,
-  currentUserId,
+  currentUserId = '',
   onRetry,
   onReply,
   onScrollToMessage,
@@ -187,22 +187,22 @@ export default function MessageBubble({
     }
 
     if (action === 'edit') {
-      onEdit(messageId, message.text);
+      onEdit?.(messageId, message.text);
       return;
     }
 
     if (action === 'delete_for_me') {
-      onDelete(messageId, 'for_me');
+      onDelete?.(messageId, 'for_me');
       return;
     }
 
     if (action === 'delete_for_everyone') {
-      onDelete(messageId, 'for_everyone');
+      onDelete?.(messageId, 'for_everyone');
       return;
     }
 
     if (action === 'block') {
-      onBlock(senderId);
+      onBlock?.(senderId);
       return;
     }
 
@@ -305,7 +305,7 @@ export default function MessageBubble({
                 key={`${messageId}-${emoji}`}
                 type="button"
                 onClick={() => {
-                  onReact(messageId, emoji);
+                  onReact?.(messageId, emoji);
                   setShowPicker(false);
                 }}
                 className="w-7 h-7 text-sm hover:bg-[#f6f4f1] rounded-lg flex items-center justify-center"
@@ -433,7 +433,7 @@ export default function MessageBubble({
                 <button
                   key={`${messageId}-reaction-${emoji}`}
                   type="button"
-                  onClick={() => onReact(messageId, emoji)}
+                  onClick={() => onReact?.(messageId, emoji)}
                   title={hasReacted ? 'Click to remove' : 'Click to react'}
                   className={`text-[13px] font-[family-name:var(--font-figtree)] px-2 py-0.5 rounded-full border ${hasReacted ? 'bg-[#f95c4b]/10 border-[#f95c4b]/30 text-[#f95c4b]' : 'bg-white border-[#e4ded2] text-[#5a5a5a]'}`}
                 >

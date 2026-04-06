@@ -64,7 +64,7 @@ export default function CreatorAnalyticsPage() {
         }
       `}</style>
 
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 24, background: '#F5F5F8', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", padding: 'clamp(12px, 2.8vw, 24px)', background: '#F5F5F8', minHeight: 'calc(100vh - 56px)' }}>
         
         {/* Header */}
         <div style={{ animation: 'cardFadeUp 0.6s ease-out 0ms both' }} className="mb-6">

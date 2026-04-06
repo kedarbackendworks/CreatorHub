@@ -140,7 +140,7 @@ export default function Dashboard() {
         }
       `}</style>
 
-      <div className="dashboard-root p-6 w-full min-h-[calc(100vh-64px)] bg-[#F5F5F8] overflow-y-auto">
+      <div className="dashboard-root p-4 sm:p-6 w-full min-h-[calc(100vh-56px)] md:min-h-[calc(100vh-64px)] bg-[#F5F5F8] overflow-y-auto">
 
         {/* ── PAGE HEADER ── */}
         <div className={`dash-animate mb-6 ${mounted ? 'visible' : ''}`} style={{ animationDelay: '0s' }}>
@@ -153,7 +153,7 @@ export default function Dashboard() {
           {statCards.map((card, idx) => (
             <div
               key={card.label}
-              className={`dash-card dash-animate bg-white rounded-xl p-5 ${mounted ? 'visible' : ''}`}
+              className={`dash-card dash-animate bg-white rounded-xl p-4 sm:p-5 min-w-0 ${mounted ? 'visible' : ''}`}
               style={{
                 boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                 animationDelay: `${0.05 * (idx + 1)}s`,
@@ -177,7 +177,7 @@ export default function Dashboard() {
               </div>
 
               {/* Mini bar chart */}
-              <div style={{ height: 110, marginTop: 12 }}>
+              <div className="min-w-0" style={{ height: 110, marginTop: 12 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={card.chartData} barSize={22} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                     <XAxis
@@ -208,11 +208,11 @@ export default function Dashboard() {
         </div>
 
         {/* ── SECOND ROW: Revenue + Top Creators ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-4 min-w-0">
 
           {/* Revenue Distribution (3/5 width) */}
           <div
-            className={`dash-card dash-animate bg-white rounded-xl p-5 lg:col-span-3 ${mounted ? 'visible' : ''}`}
+            className={`dash-card dash-animate bg-white rounded-xl p-4 sm:p-5 lg:col-span-3 min-w-0 ${mounted ? 'visible' : ''}`}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', animationDelay: '0.3s' }}
           >
             <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
@@ -260,7 +260,7 @@ export default function Dashboard() {
             </div>
             <p style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 16 }}>Performance across last 6 months</p>
 
-            <div style={{ height: 240 }}>
+            <div className="min-w-0" style={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData} barSize={revenuePeriod === 'monthly' ? 24 : 40} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
@@ -290,7 +290,7 @@ export default function Dashboard() {
 
           {/* Top Creators (2/5 width) */}
           <div
-            className={`dash-card dash-animate bg-white rounded-xl p-5 lg:col-span-2 flex flex-col ${mounted ? 'visible' : ''}`}
+            className={`dash-card dash-animate bg-white rounded-xl p-4 sm:p-5 lg:col-span-2 flex flex-col min-w-0 ${mounted ? 'visible' : ''}`}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', animationDelay: '0.35s' }}
           >
             <h3 style={{ fontSize: 16, fontWeight: 600, color: '#111827', marginBottom: 20 }}>Top Creators</h3>
@@ -347,11 +347,11 @@ export default function Dashboard() {
         </div>
 
         {/* ── THIRD ROW: Activity + Stats + Alert ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 min-w-0">
 
           {/* Recent Activity (3/5 width) */}
           <div
-            className={`dash-card dash-animate bg-white rounded-xl p-5 lg:col-span-3 flex flex-col ${mounted ? 'visible' : ''}`}
+            className={`dash-card dash-animate bg-white rounded-xl p-4 sm:p-5 lg:col-span-3 flex flex-col min-w-0 ${mounted ? 'visible' : ''}`}
             style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08)', animationDelay: '0.4s' }}
           >
             <h3 style={{ fontSize: 16, fontWeight: 600, color: '#111827', marginBottom: 16 }}>Recent Activity</h3>
@@ -360,12 +360,12 @@ export default function Dashboard() {
               {activities.map((a: any, i: number) => (
                 <div
                   key={i}
-                  className="activity-row flex items-center justify-between py-4 px-2 rounded-lg cursor-default"
+                  className="activity-row flex items-start sm:items-center justify-between gap-2 py-4 px-2 rounded-lg cursor-default"
                   style={{ borderBottom: i < activities.length - 1 ? '1px solid #F3F4F6' : 'none' }}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-start sm:items-center gap-3 min-w-0">
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: a.dot, flexShrink: 0 }} />
-                    <p style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{a.text}</p>
+                    <p className="break-words" style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{a.text}</p>
                   </div>
                   <span style={{ fontSize: 12, color: '#9CA3AF', flexShrink: 0, whiteSpace: 'nowrap' }}>{a.time}</span>
                 </div>
@@ -382,10 +382,10 @@ export default function Dashboard() {
           </div>
 
           {/* Right column: 2 mini stat cards + System alert */}
-          <div className={`lg:col-span-2 flex flex-col gap-4 dash-animate ${mounted ? 'visible' : ''}`} style={{ animationDelay: '0.45s' }}>
+          <div className={`lg:col-span-2 flex flex-col gap-4 dash-animate min-w-0 ${mounted ? 'visible' : ''}`} style={{ animationDelay: '0.45s' }}>
 
             {/* Two mini cards row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Flagged Content */}
               <div
                 className="dash-card bg-white rounded-xl p-5"
