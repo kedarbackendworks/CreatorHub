@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { LogIn, UserPlus, Eye, EyeOff } from "lucide-react";
 import api from "@/src/lib/api";
 import { useAuthStore } from "@/src/store/useAuthStore";
+import { useBanStore } from "@/src/store/useBanStore";
 import toast from "react-hot-toast";
 import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
 
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
 
   const login = useAuthStore((state) => state.login);
+  const setBanData = useBanStore((state) => state.setBanData);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,18 @@ export default function LoginPage() {
         setCaptchaRefreshNonce((prev) => prev + 1);
         
         // RBAC Redirection
-        if (res.data.role === 'creator') router.push('/creator');
+        if (res.data.role === 'creator') {
+          try {
+            const banRes = await api.get('/appeals/my-appeal');
+            setBanData({
+              activeBan: banRes.data?.activeBan ?? null,
+              appeal: banRes.data?.appeal ?? null,
+            });
+          } catch {
+            setBanData({ activeBan: null, appeal: null });
+          }
+          router.push('/creator');
+        }
         else if (res.data.role === 'admin') router.push('/admin');
         else router.push('/user');
     } catch (err: any) {

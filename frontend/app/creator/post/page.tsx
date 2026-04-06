@@ -5,8 +5,9 @@ import { Upload, Link as LinkIcon, Paperclip, X, Eye, Save, Globe, Lock, Shield,
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import withBanCheck from '@/src/hoc/withBanCheck';
 
-export default function CreatePostPage() {
+function CreatePostPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Upload images, videos, audio');
    const [audience, setAudience] = useState<'everyone' | 'members_only' | 'exclusive_paid'>('everyone');
@@ -461,3 +462,5 @@ export default function CreatePostPage() {
     </div>
   );
 }
+
+export default withBanCheck(CreatePostPage);

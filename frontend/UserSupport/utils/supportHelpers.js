@@ -17,6 +17,7 @@ function getSizeBytes(file = {}) {
 function getFileType(mimeType = '') {
   if (ATTACHMENT_LIMITS.allowedImages.includes(mimeType)) return 'image';
   if (ATTACHMENT_LIMITS.allowedVideos.includes(mimeType)) return 'video';
+  if (ATTACHMENT_LIMITS.allowedFiles.includes(mimeType)) return 'file';
   return null;
 }
 
@@ -31,25 +32,27 @@ function validateAttachments(files = []) {
   list.forEach((file) => {
     const filename = getFileName(file);
     const mimeType = getMimeType(file);
-    const fileType = getFileType(mimeType) || (file.type === 'image' || file.type === 'video' ? file.type : null);
+    const fileType = getFileType(mimeType) || (['image', 'video', 'file'].includes(file.type) ? file.type : null);
     const sizeBytes = getSizeBytes(file);
 
     if (!fileType) {
       errors.push({
         filename,
-        message: 'Unsupported file type. Use JPG, PNG, WEBP, MP4 or MOV.',
+        message: 'Unsupported file type. Use JPG, PNG, WEBP, MP4, MOV, PDF or DOC.',
       });
       return;
     }
 
     const maxBytes = fileType === 'image'
       ? ATTACHMENT_LIMITS.maxImageSizeMB * 1024 * 1024
-      : ATTACHMENT_LIMITS.maxVideoSizeMB * 1024 * 1024;
+      : fileType === 'video'
+        ? ATTACHMENT_LIMITS.maxVideoSizeMB * 1024 * 1024
+        : ATTACHMENT_LIMITS.maxFileSizeMB * 1024 * 1024;
 
     if (sizeBytes > maxBytes) {
       errors.push({
         filename,
-        message: `${fileType === 'image' ? 'Image' : 'Video'} exceeds ${fileType === 'image' ? ATTACHMENT_LIMITS.maxImageSizeMB : ATTACHMENT_LIMITS.maxVideoSizeMB}MB limit.`,
+        message: `${fileType === 'image' ? 'Image' : fileType === 'video' ? 'Video' : 'File'} exceeds ${fileType === 'image' ? ATTACHMENT_LIMITS.maxImageSizeMB : fileType === 'video' ? ATTACHMENT_LIMITS.maxVideoSizeMB : ATTACHMENT_LIMITS.maxFileSizeMB}MB limit.`,
       });
     }
   });

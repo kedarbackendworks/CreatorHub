@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import { Home, Shield, DollarSign, LayoutGrid, Settings, Search, FileText, UserPlus, HelpCircle, Brush, BarChart3, Monitor, Menu, X } from 'lucide-react';
+import { Home, Shield, DollarSign, LayoutGrid, Settings, Search, FileText, UserPlus, HelpCircle, Brush, BarChart3, Monitor, Menu, X, ClipboardList, Scale } from 'lucide-react';
 import api from '@/src/lib/api';
 import { useAuthStore } from '@/src/store/useAuthStore';
 
@@ -15,6 +15,7 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
   const logout = useAuthStore((state) => state.logout);
   const [authResolved, setAuthResolved] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [moderationCounts, setModerationCounts] = useState({ reportsPending: 0, appealsPending: 0 });
 
   const redirectToLogin = useMemo(() => {
     const nextPath = encodeURIComponent(pathname || '/admin');
@@ -73,6 +74,38 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
     setMobileNavOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (!authResolved) return;
+
+    let cancelled = false;
+
+    const loadModerationCounts = async () => {
+      try {
+        const [reportsRes, appealsRes] = await Promise.all([
+          api.get('/admin/reports', { params: { status: 'pending', page: 1, limit: 1 } }),
+          api.get('/admin/appeals', { params: { status: 'pending', page: 1, limit: 1 } }),
+        ]);
+
+        if (cancelled) return;
+
+        setModerationCounts({
+          reportsPending: Number(reportsRes?.data?.pagination?.total || 0),
+          appealsPending: Number(appealsRes?.data?.pagination?.total || 0),
+        });
+      } catch {
+        if (!cancelled) {
+          setModerationCounts({ reportsPending: 0, appealsPending: 0 });
+        }
+      }
+    };
+
+    loadModerationCounts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authResolved, pathname]);
+
   if (!authResolved) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f8f9fa] text-slate-600">
@@ -104,6 +137,21 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
     { href: '/admin/moderation', label: 'Content Moderation', icon: FileText },
     { href: '/admin/users', label: 'User Management', icon: UserPlus },
     { href: '/admin/support', label: 'Support Tickets', icon: HelpCircle },
+  ];
+
+  const moderationLinks = [
+    {
+      href: '/admin/reports',
+      label: 'Reports',
+      icon: ClipboardList,
+      count: moderationCounts.reportsPending,
+    },
+    {
+      href: '/admin/appeals',
+      label: 'Appeals',
+      icon: Scale,
+      count: moderationCounts.appealsPending,
+    },
   ];
 
   const sidebarContent = (
@@ -141,6 +189,25 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
         {mainLinks.map(({ href, label, icon: Icon }) => (
           <Link key={href} href={href} className={isActive(href)}>
             <Icon className="w-4 h-4" /> {label}
+          </Link>
+        ))}
+
+        <div className="pt-6 pb-2">
+          <h3 className="px-3 text-xs font-bold text-slate-800 uppercase tracking-wider">Moderation</h3>
+        </div>
+
+        {moderationLinks.map(({ href, label, icon: Icon, count }) => (
+          <Link
+            key={href}
+            href={href}
+            className={`${isActive(href)} justify-between`}
+          >
+            <span className="flex items-center gap-3">
+              <Icon className="w-4 h-4" /> {label}
+            </span>
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold px-1.5">
+              {count > 99 ? '99+' : count}
+            </span>
           </Link>
         ))}
 

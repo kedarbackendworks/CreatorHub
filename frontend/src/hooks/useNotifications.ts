@@ -38,9 +38,24 @@ export function useNotifications(role: 'user' | 'creator') {
       const unread = list.filter((n) => !n.isRead).length;
       setUnreadCount(unread);
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 401) {
-        setUnreadCount(0);
-        return;
+      if (axios.isAxiosError(err)) {
+        const status = err.response?.status;
+
+        if (status === 401 || status === 403 || status === 404) {
+          // Role mismatch can happen briefly during redirects/transitions.
+          // Try the alternate endpoint once before silencing.
+          try {
+            const fallbackEndpoint = role === 'creator' ? '/user/notifications' : '/creator/notifications';
+            const fallbackRes = await api.get(fallbackEndpoint);
+            const fallbackList: NotificationLike[] = Array.isArray(fallbackRes.data) ? fallbackRes.data : [];
+            const unread = fallbackList.filter((n) => !n.isRead).length;
+            setUnreadCount(unread);
+            return;
+          } catch {
+            setUnreadCount(0);
+            return;
+          }
+        }
       }
 
       console.error('Failed to fetch notification count', err);

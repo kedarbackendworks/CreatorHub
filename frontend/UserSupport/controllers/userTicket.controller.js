@@ -16,9 +16,10 @@ const upload = multer({
     const allowed = [
       ...ATTACHMENT_LIMITS.allowedImages,
       ...ATTACHMENT_LIMITS.allowedVideos,
+      ...ATTACHMENT_LIMITS.allowedFiles,
     ];
     if (!allowed.includes(file.mimetype)) {
-      return cb(new Error('Unsupported file type. Use JPG, PNG, WEBP, MP4 or MOV.'));
+      return cb(new Error('Unsupported file type. Use JPG, PNG, WEBP, MP4, MOV, PDF or DOC.'));
     }
     return cb(null, true);
   },

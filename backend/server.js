@@ -10,6 +10,9 @@ const moderationRoutes = require('../frontend/Moderation/routes');
 const adminManagementRoutes = require('../frontend/AdminManagement/routes/admin.routes');
 const userSupportRoutes = require('../frontend/UserSupport/routes/userTicket.routes');
 const supportTicketRoutes = require('../frontend/SupportTickets/routes/ticket.routes');
+const { initCronJobs } = require('./config/cronJobs');
+const reportsRoutes = require('./src/modules/reports/reports.routes');
+const appealsRoutes = require('./src/modules/appeals/appeals.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -35,6 +38,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // DB Connection
 connectDB();
+initCronJobs();
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
@@ -46,6 +50,8 @@ app.use('/api/moderation', moderationRoutes);
 app.use('/api/admin-management', adminManagementRoutes);
 app.use('/api/support/user', userSupportRoutes);
 app.use('/api/support', supportTicketRoutes);
+app.use('/api', reportsRoutes);
+app.use('/api', appealsRoutes);
 
 app.get('/', (req, res) => {
   res.send('API running...');

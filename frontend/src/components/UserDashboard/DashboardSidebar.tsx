@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Scale } from 'lucide-react';
 import SettingsModal from './SettingsModal';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useBanStore } from '@/src/store/useBanStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import SupportNavItem from '@/UserSupport/components/SupportNavItem';
 
@@ -16,15 +17,21 @@ const NAV_ITEMS = [
   { label: 'My library', icon: '/assets/dashboard/icon-heart.svg', href: '/user/library' },
   { label: 'Messages', icon: '/assets/dashboard/icon-chat.svg', href: '/user/messages' },
   { label: 'My wallet', icon: '/assets/dashboard/icon-chat.svg', href: '/user/wallet' },
+  { label: 'Appeal', href: '/appeal', lucideIcon: Scale },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const user = useAuthStore((state) => state.user);
   const unreadCount = useAuthStore((state) => state.unreadCount);
+  const activeBan = useBanStore((state) => state.activeBan);
+  const canAppeal = useBanStore((state) => state.canAppeal);
 
   useNotifications('user');
+
+  const showAppealBadge = user?.role === 'creator' && Boolean(activeBan?.isActive) && canAppeal;
 
   const handleNavigate = () => setIsMobileOpen(false);
 
@@ -47,7 +54,10 @@ export default function DashboardSidebar() {
         {NAV_ITEMS.map((item, index) => {
           const isActive = pathname === item.href;
           const isNotificationsItem = item.label === 'Notifications';
+          const isAppealItem = item.label === 'Appeal';
           const showBadge = isNotificationsItem && unreadCount > 0;
+          const showAppealDot = isAppealItem && showAppealBadge;
+          const LucideIcon = item.lucideIcon;
           return (
             <Link
               href={item.href}
@@ -58,12 +68,18 @@ export default function DashboardSidebar() {
               }`}
             >
               <div className="relative size-[24px] shrink-0">
-                <Image src={item.icon} alt={item.label} fill className={isActive ? 'opacity-100' : 'opacity-80'} />
+                {item.icon ? (
+                  <Image src={item.icon} alt={item.label} fill className={isActive ? 'opacity-100' : 'opacity-80'} />
+                ) : null}
+                {LucideIcon ? (
+                  <LucideIcon className={`w-5 h-5 ${isActive ? 'text-[#3a3a3a]' : 'text-[#5a5a5a]'}`} />
+                ) : null}
                 {showBadge && (
                   <span className="absolute top-0 right-0 bg-[#f95c4b] text-white rounded-full text-[10px] min-w-[16px] h-[16px] flex items-center justify-center leading-none">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
+                {showAppealDot && <span className="absolute top-0 right-0 bg-red-500 rounded-full w-2 h-2" />}
               </div>
               <p className={`font-[family-name:var(--font-figtree)] font-medium leading-[25.8px] text-[16px] tracking-[0.32px] whitespace-nowrap ${isActive ? 'text-[#3a3a3a]' : 'text-[#5a5a5a]'}`}>
                 {item.label}

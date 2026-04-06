@@ -28,7 +28,7 @@ const ticketSchema = new mongoose.Schema(
       type: [
         {
           url: { type: String, default: '' },
-          type: { type: String, enum: ['image', 'video'], required: true },
+          type: { type: String, enum: ['image', 'video', 'file'], required: true },
           filename: { type: String, default: '' },
           sizeBytes: { type: Number, default: 0 },
         },

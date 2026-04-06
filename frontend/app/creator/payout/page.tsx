@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { ArrowRight, Landmark, FileText, UserCheck } from 'lucide-react';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
+import withBanCheck from '@/src/hoc/withBanCheck';
 
-export default function PayoutSettingsPage() {
+function PayoutSettingsPage() {
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -131,3 +132,5 @@ export default function PayoutSettingsPage() {
     </div>
   );
 }
+
+export default withBanCheck(PayoutSettingsPage);

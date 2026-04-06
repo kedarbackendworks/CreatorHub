@@ -2,10 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Bell, Library, MessageSquare, Megaphone, Receipt, PlusCircle, PenTool, Video, MoreVertical, FileText, X, ChevronDown, History, Menu } from 'lucide-react';
+import { Home, Bell, Library, MessageSquare, Megaphone, Receipt, PlusCircle, PenTool, Video, MoreVertical, FileText, X, ChevronDown, History, Menu, Lock, Scale } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import api from '@/src/lib/api';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import { useBanStore } from '@/src/store/useBanStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
+import BanPopup from '@/src/components/ban/BanPopup';
 import SupportNavItem from '@/UserSupport/components/SupportNavItem';
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
@@ -15,14 +19,59 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
   const [publishModalOpen, setPublishModalOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const user = useAuthStore((state) => state.user);
+  const token = useAuthStore((state) => state.token);
   const unreadCount = useAuthStore((state) => state.unreadCount);
   const logout = useAuthStore((state) => state.logout);
+  const activeBan = useBanStore((state) => state.activeBan);
+  const setBanData = useBanStore((state) => state.setBanData);
+  const clearBanState = useBanStore((state) => state.clearBanState);
+  const openBanPopup = useBanStore((state) => state.openBanPopup);
+  const canAppeal = useBanStore((state) => state.canAppeal);
 
-  useNotifications('creator');
+  useNotifications(user?.role === 'creator' ? 'creator' : 'user');
 
   useEffect(() => {
     setMobileNavOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    if (!token || user?.role !== 'creator') {
+      clearBanState();
+      return;
+    }
+
+    let cancelled = false;
+
+    const syncBanState = async () => {
+      try {
+        const res = await api.get('/appeals/my-appeal');
+        if (cancelled) return;
+        setBanData({
+          activeBan: res.data?.activeBan ?? null,
+          appeal: res.data?.appeal ?? null
+        });
+      } catch {
+        if (!cancelled) {
+          clearBanState();
+        }
+      }
+    };
+
+    syncBanState();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname, token, user?.role, setBanData, clearBanState]);
+
+  const isBanned = Boolean(activeBan?.isActive);
+  const showAppealBadge = isBanned && canAppeal;
+
+  const onRestrictedNavClick = () => {
+    if (!isBanned) return;
+    openBanPopup();
+    toast.error('Your account is suspended. Go to Appeal.');
+  };
 
   const isActive = (path: string) => {
     return pathname === path 
@@ -74,9 +123,30 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
           <Link href="/creator/insights" className={isActive('/creator/insights')}>
             <Megaphone className="w-5 h-5 stroke-[1.5]" /> Insights
           </Link>
-          <Link href="/creator/payout" className={isActive('/creator/payout')}>
-            <Receipt className="w-5 h-5 stroke-[1.5]" /> Payout
+          <Link href="/appeal" className={isActive('/appeal')}>
+            <span className="relative inline-flex">
+              <Scale className="w-5 h-5 stroke-[1.5]" />
+              {showAppealBadge && <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />}
+            </span>
+            Appeal
           </Link>
+          {isBanned ? (
+            <button
+              type="button"
+              title="Account suspended"
+              onClick={onRestrictedNavClick}
+              className="w-full flex items-center justify-between px-3 py-2 text-sm font-semibold text-slate-400 rounded-lg mb-2 cursor-not-allowed"
+            >
+              <span className="flex items-center gap-4">
+                <Receipt className="w-5 h-5 stroke-[1.5]" /> Payouts
+              </span>
+              <Lock className="w-4 h-4 text-red-500" />
+            </button>
+          ) : (
+            <Link href="/creator/payout" className={isActive('/creator/payout')}>
+              <Receipt className="w-5 h-5 stroke-[1.5]" /> Payouts
+            </Link>
+          )}
           <SupportNavItem role="creator" className={isActive('/creator/support')} />
 
           <div className="mt-4">
@@ -92,12 +162,40 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
              
              {createOpen && (
                <div className="ml-5 mt-2 space-y-2 border-l border-slate-200">
-                  <Link href="/creator/post" className="flex items-center gap-3 px-6 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">
-                    <PenTool className="w-4 h-4 stroke-[1.5]" /> Create a post
-                  </Link>
-                  <Link href="/creator/livestream" className="flex items-center gap-3 px-6 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">
-                    <Video className="w-4 h-4 stroke-[1.5]" /> Create a livestream
-                  </Link>
+                  {isBanned ? (
+                    <button
+                      type="button"
+                      title="Account suspended"
+                      onClick={onRestrictedNavClick}
+                      className="w-full flex items-center justify-between px-6 py-2 text-[13px] font-semibold text-slate-400 cursor-not-allowed"
+                    >
+                      <span className="flex items-center gap-3">
+                        <PenTool className="w-4 h-4 stroke-[1.5]" /> Create Post
+                      </span>
+                      <Lock className="w-3.5 h-3.5 text-red-500" />
+                    </button>
+                  ) : (
+                    <Link href="/creator/post" className="flex items-center gap-3 px-6 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                      <PenTool className="w-4 h-4 stroke-[1.5]" /> Create Post
+                    </Link>
+                  )}
+                  {isBanned ? (
+                    <button
+                      type="button"
+                      title="Account suspended"
+                      onClick={onRestrictedNavClick}
+                      className="w-full flex items-center justify-between px-6 py-2 text-[13px] font-semibold text-slate-400 cursor-not-allowed"
+                    >
+                      <span className="flex items-center gap-3">
+                        <Video className="w-4 h-4 stroke-[1.5]" /> Upload
+                      </span>
+                      <Lock className="w-3.5 h-3.5 text-red-500" />
+                    </button>
+                  ) : (
+                    <Link href="/creator/livestream" className="flex items-center gap-3 px-6 py-2 text-[13px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+                      <Video className="w-4 h-4 stroke-[1.5]" /> Upload
+                    </Link>
+                  )}
                </div>
              )}
           </div>
@@ -245,6 +343,8 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
            </div>
         </div>
       )}
+
+      <BanPopup />
     </div>
   );
 }

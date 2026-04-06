@@ -6,8 +6,9 @@ import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import FeatureUnavailablePanel from '@/src/components/common/FeatureUnavailablePanel';
+import withBanCheck from '@/src/hoc/withBanCheck';
 
-export default function CreateLivestreamPage() {
+function CreateLivestreamPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('Go live now');
   const [audience, setAudience] = useState('All members');
@@ -368,3 +369,5 @@ export default function CreateLivestreamPage() {
     </div>
   );
 }
+
+export default withBanCheck(CreateLivestreamPage);

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/authMiddleware');
-const { checkBan } = require('../../frontend/Moderation/middleware/checkBan.middleware');
+const { checkBan } = require('../middleware/checkBan');
 const { checkFeatureToggle } = require('../middleware/featureToggleMiddleware');
 const {
   startStream,

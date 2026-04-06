@@ -25,8 +25,10 @@ const ATTACHMENT_LIMITS = {
   maxFiles: 5,
   maxImageSizeMB: 10,
   maxVideoSizeMB: 50,
+  maxFileSizeMB: 20,
   allowedImages: ['image/jpeg', 'image/png', 'image/webp'],
   allowedVideos: ['video/mp4', 'video/quicktime'],
+  allowedFiles: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
 };
 
 module.exports = {
