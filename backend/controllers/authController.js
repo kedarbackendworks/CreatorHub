@@ -7,6 +7,12 @@ const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const { getRuntimeSecuritySettings } = require('../utils/securitySettings');
+const {
+  DISPOSABLE_EMAIL_BLOCK_MESSAGE,
+  normalizeEmailAddress,
+  isValidEmailFormat,
+  evaluateDisposableEmail,
+} = require('../utils/disposableEmail');
 const { checkFlagged } = require('../../frontend/Moderation/services/flaggedIdentity.service');
 
 const DEFAULT_TERMS_OF_SERVICE =
@@ -113,8 +119,55 @@ const sendOtpEmail = async (email, otp) => {
   });
 };
 
+const sendDisposableEmailRejected = (res) =>
+  res.status(422).json({
+    code: 'DISPOSABLE_EMAIL_NOT_ALLOWED',
+    message: DISPOSABLE_EMAIL_BLOCK_MESSAGE,
+  });
+
+// @desc    Check whether an email can be used for signup
+// @route   POST /api/auth/email/check
+// @access  Public
+const checkEmailEligibility = async (req, res) => {
+  const normalizedEmail = normalizeEmailAddress(req.body?.email);
+
+  if (!normalizedEmail) {
+    return res.status(400).json({
+      code: 'EMAIL_REQUIRED',
+      message: 'Email is required',
+    });
+  }
+
+  if (!isValidEmailFormat(normalizedEmail)) {
+    return res.status(400).json({
+      code: 'INVALID_EMAIL',
+      message: 'Please enter a valid email address',
+    });
+  }
+
+  try {
+    const emailStatus = await evaluateDisposableEmail(normalizedEmail);
+    if (emailStatus.isDisposable) {
+      return res.json({
+        valid: true,
+        disposable: true,
+        code: 'DISPOSABLE_EMAIL_NOT_ALLOWED',
+        message: DISPOSABLE_EMAIL_BLOCK_MESSAGE,
+      });
+    }
+
+    return res.json({
+      valid: true,
+      disposable: false,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 const registerUser = async (req, res) => {
   const { name, email, password, role, username, phone, deviceFingerprint } = req.body;
+  const normalizedEmail = normalizeEmailAddress(email);
 
   try {
     const { minPasswordLength } = await getRuntimeSecuritySettings();
@@ -125,8 +178,17 @@ const registerUser = async (req, res) => {
         .json({ message: `Password must be at least ${minPasswordLength} characters long` });
     }
 
+    if (!isValidEmailFormat(normalizedEmail)) {
+      return res.status(400).json({ message: 'Please enter a valid email address' });
+    }
+
+    const emailStatus = await evaluateDisposableEmail(normalizedEmail);
+    if (emailStatus.isDisposable) {
+      return sendDisposableEmailRejected(res);
+    }
+
     const flagged = await checkFlagged({
-      email,
+      email: normalizedEmail,
       phone,
       username,
       deviceFingerprint,
@@ -138,7 +200,7 @@ const registerUser = async (req, res) => {
       });
     }
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: normalizedEmail });
 
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -151,7 +213,7 @@ const registerUser = async (req, res) => {
       name,
       username: username || name.toLowerCase().replace(/\s+/g, ''),
       phone: phone || '',
-      email,
+      email: normalizedEmail,
       password,
       role: role || 'user',
       otp,
@@ -161,7 +223,7 @@ const registerUser = async (req, res) => {
     if (user) {
       // Send OTP email
       try {
-        await sendOtpEmail(email, otp);
+        await sendOtpEmail(normalizedEmail, otp);
       } catch (emailErr) {
         console.error('OTP email failed:', emailErr.message);
         // Don't fail registration if email fails — user can resend
@@ -184,7 +246,7 @@ const registerUser = async (req, res) => {
 // @access  Public
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const normalizedEmail = normalizeEmailAddress(email);
 
   try {
     const user = await User.findOne({ email: normalizedEmail });
@@ -309,13 +371,18 @@ const getConversationKey = async (req, res) => {
 // @access  Public
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
+  const normalizedEmail = normalizeEmailAddress(email);
 
-  if (!email) {
+  if (!normalizedEmail) {
     return res.status(400).json({ message: 'Email is required' });
   }
 
+  if (!isValidEmailFormat(normalizedEmail)) {
+    return res.status(400).json({ message: 'Please enter a valid email address' });
+  }
+
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return res.status(404).json({ message: 'No account found with this email' });
@@ -401,9 +468,14 @@ const resetPassword = async (req, res) => {
 // @access  Public
 const requestOtp = async (req, res) => {
   const { email } = req.body;
+  const normalizedEmail = normalizeEmailAddress(email);
+
+  if (!isValidEmailFormat(normalizedEmail)) {
+    return res.status(400).json({ message: 'Please enter a valid email address' });
+  }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -418,7 +490,7 @@ const requestOtp = async (req, res) => {
     await user.save({ validateBeforeSave: false });
 
     try {
-      await sendOtpEmail(email, otp);
+      await sendOtpEmail(normalizedEmail, otp);
     } catch (emailErr) {
       console.error('OTP email failed:', emailErr.message);
       return res.status(500).json({ message: 'Failed to send OTP email' });
@@ -435,9 +507,14 @@ const requestOtp = async (req, res) => {
 // @access  Public
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
+  const normalizedEmail = normalizeEmailAddress(email);
+
+  if (!isValidEmailFormat(normalizedEmail)) {
+    return res.status(400).json({ message: 'Please enter a valid email address' });
+  }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
@@ -583,6 +660,7 @@ const setRole = async (req, res) => {
 };
 
 module.exports = {
+  checkEmailEligibility,
   registerUser,
   loginUser,
   getUserProfile,

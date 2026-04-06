@@ -70,6 +70,7 @@ const appSettingSchema = new mongoose.Schema({
   botProtectionEnabled: { type: Boolean, default: false },
   sessionTimeout: { type: String, default: '30 Minutes' },
   minPasswordLength: { type: Number, default: 12 },
+  blockedEmailDomains: [{ type: String, trim: true, lowercase: true }],
 
   // Feature Toggles (existing)
   toggles: {

@@ -9,6 +9,12 @@ import api from "@/src/lib/api";
 import toast from "react-hot-toast";
 import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
 
+type EmailCheckStatus = "idle" | "invalid" | "checking" | "allowed" | "disposable";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DISPOSABLE_EMAIL_WARNING =
+  "Disposable email addresses are not allowed. Please use a permanent email address.";
+
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,6 +31,8 @@ function SignUpForm() {
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaRequired, setCaptchaRequired] = useState(false);
   const [captchaRefreshNonce, setCaptchaRefreshNonce] = useState(0);
+  const [emailCheckStatus, setEmailCheckStatus] = useState<EmailCheckStatus>("idle");
+  const [emailWarning, setEmailWarning] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -48,8 +56,77 @@ function SignUpForm() {
     };
   }, []);
 
+  useEffect(() => {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setEmailCheckStatus("idle");
+      setEmailWarning("");
+      return;
+    }
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      setEmailCheckStatus("invalid");
+      setEmailWarning("");
+      return;
+    }
+
+    let isActive = true;
+    setEmailCheckStatus("checking");
+    setEmailWarning("");
+
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await api.post('/auth/email/check', { email: normalizedEmail });
+
+        if (!isActive) {
+          return;
+        }
+
+        if (data?.disposable) {
+          setEmailCheckStatus("disposable");
+          setEmailWarning(data?.message || DISPOSABLE_EMAIL_WARNING);
+          return;
+        }
+
+        setEmailCheckStatus("allowed");
+        setEmailWarning("");
+      } catch {
+        if (!isActive) {
+          return;
+        }
+
+        // Backend still enforces this check on submit; this keeps UX resilient on transient API failures.
+        setEmailCheckStatus("allowed");
+        setEmailWarning("");
+      }
+    }, 350);
+
+    return () => {
+      isActive = false;
+      clearTimeout(timer);
+    };
+  }, [email]);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    if (emailCheckStatus === "checking") {
+      toast.error("Please wait while we verify your email address");
+      return;
+    }
+
+    if (emailCheckStatus === "disposable") {
+      toast.error(emailWarning || DISPOSABLE_EMAIL_WARNING);
+      return;
+    }
 
     if (password.length < minPasswordLength) {
       toast.error(`Password must be at least ${minPasswordLength} characters`);
@@ -78,7 +155,7 @@ function SignUpForm() {
         name,
         username,
         phone,
-        email,
+        email: normalizedEmail,
         password,
         role,
         deviceFingerprint,
@@ -89,10 +166,20 @@ function SignUpForm() {
         setCaptchaToken("");
         setCaptchaRefreshNonce((prev) => prev + 1);
         // Redirect to verify-email page with the email
-        router.push(`/login/verify-email?email=${encodeURIComponent(email)}`);
+        router.push(`/login/verify-email?email=${encodeURIComponent(normalizedEmail)}`);
       }
-    } catch (err: any) {
-      const message = err.response?.data?.message || "Registration failed";
+    } catch (err: unknown) {
+      const axiosError = err as {
+        response?: { data?: { message?: string; code?: string } };
+      };
+      const message = axiosError.response?.data?.message || "Registration failed";
+      const code = axiosError.response?.data?.code;
+
+      if (code === 'DISPOSABLE_EMAIL_NOT_ALLOWED') {
+        setEmailCheckStatus("disposable");
+        setEmailWarning(message || DISPOSABLE_EMAIL_WARNING);
+      }
+
       if (String(message).toLowerCase().includes('captcha')) {
         setCaptchaToken("");
         setCaptchaRefreshNonce((prev) => prev + 1);
@@ -219,9 +306,19 @@ function SignUpForm() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="hello@example.com"
             required
-            className="w-full bg-[#faf8f5] border border-[#d8d1c7] rounded-full px-6 py-4 outline-none focus:border-[#ff9465] transition-colors text-base text-[#1a1a1a] font-medium placeholder:text-[#9a9a9a]"
+            className={`w-full bg-[#faf8f5] border rounded-full px-6 py-4 outline-none transition-colors text-base text-[#1a1a1a] font-medium placeholder:text-[#9a9a9a] ${
+              emailCheckStatus === "disposable"
+                ? "border-red-500 focus:border-red-500"
+                : "border-[#d8d1c7] focus:border-[#ff9465]"
+            }`}
             style={{ fontFamily: "'Figtree', sans-serif" }}
           />
+          {emailCheckStatus === "checking" && (
+            <p className="text-xs text-[#8a8173] ml-1">Checking email provider...</p>
+          )}
+          {emailCheckStatus === "disposable" && (
+            <p className="text-xs text-[#c62828] ml-1">{emailWarning || DISPOSABLE_EMAIL_WARNING}</p>
+          )}
         </div>
 
         {/* Password */}
@@ -290,14 +387,20 @@ function SignUpForm() {
         <div className="flex justify-center mt-4">
           <button
             type="submit"
-            disabled={loading}
+            disabled={
+              loading || emailCheckStatus === "checking" || emailCheckStatus === "disposable"
+            }
             className="px-10 py-3 rounded-full border border-[#ff9465] text-[#f6f4f1] shadow-[8px_8px_20px_0px_rgba(69,9,0,0.35)] transition-transform hover:scale-105 active:scale-95 whitespace-nowrap opacity-90 hover:opacity-100 disabled:opacity-50"
             style={{
               background: "linear-gradient(131.5deg, #e14517 57.5%, #d6361f 100%)",
               fontFamily: "'Lexend', sans-serif",
             }}
           >
-            {loading ? "Creating..." : "Create Account"}
+            {loading
+              ? "Creating..."
+              : emailCheckStatus === "checking"
+                ? "Checking email..."
+                : "Create Account"}
           </button>
         </div>
 

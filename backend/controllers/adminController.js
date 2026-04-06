@@ -532,6 +532,21 @@ const {
   normalizeMinPasswordLength,
   getRuntimeSecuritySettings,
 } = require('../utils/securitySettings');
+const { invalidateDisposableEmailCache } = require('../utils/disposableEmail');
+
+const normalizeBlockedEmailDomains = (value) => {
+  const source = Array.isArray(value)
+    ? value
+    : typeof value === 'string'
+      ? value.split(',')
+      : [];
+
+  const normalized = source
+    .map((domain) => String(domain || '').trim().toLowerCase())
+    .filter(Boolean);
+
+  return [...new Set(normalized)];
+};
 
 exports.getAllData = async (req, res) => {
   try {
@@ -571,6 +586,11 @@ exports.deleteUser = async (req, res) => {
 exports.updateSettings = async (req, res) => {
   try {
     const settings = await AppSetting.findOneAndUpdate({}, req.body, { new: true });
+
+    if (Object.prototype.hasOwnProperty.call(req.body || {}, 'blockedEmailDomains')) {
+      invalidateDisposableEmailCache();
+    }
+
     res.status(200).json(settings);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -587,6 +607,7 @@ exports.getSettings = async (req, res) => {
 
     const normalizedSessionTimeout = normalizeSessionTimeout(settings.sessionTimeout);
     const normalizedMinPasswordLength = normalizeMinPasswordLength(settings.minPasswordLength);
+    const normalizedBlockedEmailDomains = normalizeBlockedEmailDomains(settings.blockedEmailDomains);
     let shouldPersistNormalization = false;
 
     if (settings.sessionTimeout !== normalizedSessionTimeout) {
@@ -599,8 +620,17 @@ exports.getSettings = async (req, res) => {
       shouldPersistNormalization = true;
     }
 
+    const existingDomains = Array.isArray(settings.blockedEmailDomains)
+      ? settings.blockedEmailDomains
+      : [];
+    if (JSON.stringify(existingDomains) !== JSON.stringify(normalizedBlockedEmailDomains)) {
+      settings.blockedEmailDomains = normalizedBlockedEmailDomains;
+      shouldPersistNormalization = true;
+    }
+
     if (shouldPersistNormalization) {
       await settings.save();
+      invalidateDisposableEmailCache();
     }
 
     res.status(200).json(settings.toObject());
@@ -616,7 +646,8 @@ exports.saveSettings = async (req, res) => {
       'termsOfService', 'privacyPolicy',
       'commission', 'minPayout', 'currency', 'transactionFee',
       'razorpayConnected', 'stripeConnected',
-      'twoFactorEnabled', 'botProtectionEnabled', 'sessionTimeout', 'minPasswordLength'
+      'twoFactorEnabled', 'botProtectionEnabled', 'sessionTimeout', 'minPasswordLength',
+      'blockedEmailDomains',
     ];
 
     const update = {};
@@ -632,11 +663,19 @@ exports.saveSettings = async (req, res) => {
       update.minPasswordLength = normalizeMinPasswordLength(update.minPasswordLength);
     }
 
+    if (Object.prototype.hasOwnProperty.call(update, 'blockedEmailDomains')) {
+      update.blockedEmailDomains = normalizeBlockedEmailDomains(update.blockedEmailDomains);
+    }
+
     const settings = await AppSetting.findOneAndUpdate(
       {},
       { $set: update },
       { new: true, upsert: true }
     );
+
+    if (Object.prototype.hasOwnProperty.call(update, 'blockedEmailDomains')) {
+      invalidateDisposableEmailCache();
+    }
 
     res.status(200).json(settings.toObject());
   } catch (error) {
@@ -663,6 +702,7 @@ exports.resetSettings = async (req, res) => {
       botProtectionEnabled: false,
       sessionTimeout: DEFAULT_SESSION_TIMEOUT,
       minPasswordLength: DEFAULT_MIN_PASSWORD_LENGTH,
+      blockedEmailDomains: [],
     };
 
     const settings = await AppSetting.findOneAndUpdate(
@@ -670,6 +710,8 @@ exports.resetSettings = async (req, res) => {
       { $set: defaults },
       { new: true, upsert: true }
     );
+
+    invalidateDisposableEmailCache();
 
     res.status(200).json(settings.toObject());
   } catch (error) {
