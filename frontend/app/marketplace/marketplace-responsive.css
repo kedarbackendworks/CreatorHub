@@ -1,0 +1,191 @@
+/* ============================================
+   MARKETPLACE — RESPONSIVE STYLES
+   Tablet: max-width 1024px
+   Mobile: max-width 768px
+   DO NOT MODIFY DESKTOP STYLES
+   ============================================ */
+
+/* Tablet Overrides */
+@media (max-width: 1024px) {
+  /* Center Hero Grid on Tablet */
+  section:nth-of-type(1) .flex.flex-col.lg\:flex-row {
+     align-items: center !important;
+  }
+  section:nth-of-type(1) .lg\:w-\[524px\] {
+    margin: 40px auto 0 !important;
+  }
+  section:nth-of-type(1) .max-w-\[580px\] {
+    margin-top: 40px !important;
+    text-align: center !important;
+    align-items: center !important;
+  }
+}
+
+/* Mobile Overrides */
+@media (max-width: 768px) {
+  /* Component 1: MarketplaceHero */
+  section:nth-of-type(1) {
+    padding-bottom: 40px !important;
+  }
+  section:nth-of-type(1) .px-5 {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+  section:nth-of-type(1) .pt-\[150px\] {
+    padding-top: 60px !important;
+  }
+  /* Typography adjust */
+  section:nth-of-type(1) h1.text-\[48px\], section:nth-of-type(1) h1.md\:text-\[64px\] {
+    font-size: 36px !important;
+    line-height: 42px !important;
+  }
+  section:nth-of-type(1) p.text-\[19px\] {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  /* Left Alignment on mobile */
+  section:nth-of-type(1) .max-w-\[580px\] {
+    margin-top: 20px !important;
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+
+  /* Right Side Masonry Grid */
+  section:nth-of-type(1) .lg\:w-\[524px\] {
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: auto auto !important;
+    gap: 12px !important;
+    margin-top: 40px !important;
+    width: 100% !important;
+  }
+  section:nth-of-type(1) .lg\:w-\[524px\] > div {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+  /* Large Left Image */
+  section:nth-of-type(1) .lg\:w-\[524px\] > div:nth-child(1) {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    aspect-ratio: 252 / 440;
+  }
+  /* Small Top Right Image */
+  section:nth-of-type(1) .lg\:w-\[524px\] > div:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+    aspect-ratio: 252 / 240;
+  }
+  /* Small Bottom Right Image */
+  section:nth-of-type(1) .lg\:w-\[524px\] > div:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+    aspect-ratio: 252 / 240;
+  }
+
+
+  /* Component 2, 3, 4: TopCreators, LatestFromCreators, CuratedCollections */
+  section:nth-of-type(2), 
+  section:nth-of-type(3), 
+  section:nth-of-type(4) {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+  section:nth-of-type(2) h2.text-\[40px\],
+  section:nth-of-type(3) h2.text-\[40px\],
+  section:nth-of-type(4) h2.text-\[40px\] {
+    font-size: 32px !important;
+    line-height: 40px !important;
+  }
+  section:nth-of-type(2) p.text-\[19px\],
+  section:nth-of-type(3) p.text-\[19px\],
+  section:nth-of-type(4) p.text-\[19px\] {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+
+  /* Fix TopCreators Toolbar order */
+  section:nth-of-type(2) .flex-col.md\:flex-row {
+    align-items: flex-start !important;
+  }
+  /* The innermost right block in header */
+  section:nth-of-type(2) .flex-col.md\:flex-row > div:nth-child(2) {
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+    width: 100% !important;
+    margin-top: 12px !important;
+  }
+  
+  section:nth-of-type(2) .flex-col.md\:flex-row > div:nth-child(2) .bg-\[\#faf8f5\] {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  
+  section:nth-of-type(2) a.text-\[19px\] {
+    font-size: 16px !important;
+  }
+  
+  /* Component 4 Fixes */
+  section:nth-of-type(4) .flex-col.md\:flex-row {
+    align-items: flex-start !important;
+  }
+  section:nth-of-type(4) a.text-\[19px\] {
+    font-size: 16px !important;
+    margin-top: 12px !important;
+  }
+
+  /* Grid alignment specifically to fix card cutoffs */
+  section:nth-of-type(2) .grid,
+  section:nth-of-type(4) .grid {
+    justify-items: center !important;
+    place-items: center !important;
+  }
+  
+  /* Guarantee the cards don't overflow the viewport width */
+  section:nth-of-type(2) .grid > div,
+  section:nth-of-type(4) .grid > div {
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Component 5: CreatorInsights */
+  section:nth-of-type(5) {
+    height: auto !important;
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+  section:nth-of-type(5) h2.text-\[48px\] {
+    font-size: 32px !important;
+    line-height: 42px !important;
+  }
+  section:nth-of-type(5) p.text-\[19px\] {
+    font-size: 16px !important;
+    line-height: 24px !important;
+  }
+  
+  /* Stack the newsletter input and button */
+  section:nth-of-type(5) .bg-\[\#f6f4f1\].p-1 {
+    flex-direction: column !important;
+    border-radius: 16px !important;
+    padding: 12px !important;
+    gap: 12px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+  section:nth-of-type(5) .bg-\[\#f6f4f1\].p-1 > input {
+    width: 100% !important;
+    background: #f6f4f1 !important;
+    border-radius: 42px !important;
+    border: 1px solid #d8d1c7 !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  }
+  section:nth-of-type(5) .bg-\[\#f6f4f1\].p-1 > button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}

@@ -1,0 +1,201 @@
+/* ============================================
+   ABOUT US — RESPONSIVE STYLES
+   Tablet: max-width 1024px
+   Mobile: max-width 768px
+   DO NOT MODIFY DESKTOP STYLES
+   ============================================ */
+
+/* Tablet Overrides */
+@media (max-width: 1024px) {
+  /* Hero Section */
+  section:nth-of-type(1) .flex-col.lg\:flex-row {
+    flex-direction: column !important;
+  }
+  
+  /* Hero Text */
+  section:nth-of-type(1) .text-\[48px\] {
+    font-size: 40px !important;
+    line-height: 52px !important;
+  }
+  
+  /* Center Hero Grid on Tablet */
+  section:nth-of-type(1) .lg\:w-\[656px\] {
+    margin: 0 auto !important;
+  }
+  
+  /* Creator Growth */
+  section:nth-of-type(4) .text-\[33px\] {
+    font-size: 28px !important;
+    line-height: 40px !important;
+  }
+}
+
+/* Mobile Overrides */
+@media (max-width: 768px) {
+  /* Global Padding Adjustments */
+  .px-8 { 
+    padding-left: 20px !important; 
+    padding-right: 20px !important; 
+  }
+  
+  /* Hero Section Top Spacing */
+  section:nth-of-type(1) {
+    padding-top: 60px !important;
+    padding-bottom: 40px !important;
+  }
+  
+  /* Hero Typography */
+  section:nth-of-type(1) .text-\[48px\] {
+    font-size: 32px !important;
+    line-height: 42px !important;
+  }
+  
+  /* Hero Masonry Grid */
+  section:nth-of-type(1) .lg\:w-\[656px\] {
+    height: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+    align-items: start !important;
+  }
+  
+  /* Reset absolute positioning for cards */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  /* Card Text Adjustments to prevent overflow */
+  section:nth-of-type(1) .lg\:w-\[656px\] p.text-base {
+    font-size: 14px !important;
+    line-height: 20px !important;
+  }
+  section:nth-of-type(1) .lg\:w-\[656px\] p.text-\[13px\] {
+    font-size: 12px !important;
+    line-height: 16px !important;
+  }
+
+  /* 1. Aarav Sharma (Left, Top) */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(1) { 
+    height: 210px !important; 
+    order: 1 !important; 
+  }
+  
+  /* 2. Global Creator Network - Green (Right, Top) */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(2) { 
+    height: 140px !important; 
+    order: 2 !important; 
+  }
+  
+  /* 3. Sakti Kapoor - Hide on mobile */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(3) { 
+    display: none !important; 
+  }
+  
+  /* 4. Riya Kapoor (Right, Bottom) - Shift up to create masonry */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(4) { 
+    height: 210px !important; 
+    order: 4 !important; 
+    margin-top: -70px !important; 
+  }
+  
+  /* 5. Global Creator - Orange - Hide on mobile */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(5) { 
+    display: none !important; 
+  }
+  
+  /* 6. Flexible & Scalable (Left, Bottom) */
+  section:nth-of-type(1) .lg\:w-\[656px\] > div:nth-child(6) { 
+    height: 140px !important; 
+    order: 3 !important; 
+  }
+  
+  /* Social Media Banner */
+  section:nth-of-type(2) .max-w-\[1312px\] {
+    gap: 32px !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    padding-bottom: 12px !important; /* Visual breathing room for scrollbar */
+  }
+  
+  /* Prevent flex children from shrinking and squishing into each other */
+  section:nth-of-type(2) .max-w-\[1312px\] > div {
+    flex-shrink: 0 !important;
+  }
+  
+  section:nth-of-type(2) .text-\[28px\] { 
+    font-size: 18px !important; 
+  }
+  section:nth-of-type(2) img.w-8 { 
+    width: 24px !important; 
+    height: 24px !important; 
+  }
+  
+  /* Quote Section */
+  section:nth-of-type(3) { 
+    padding-top: 40px !important; 
+    padding-bottom: 40px !important; 
+  }
+  section:nth-of-type(3) .text-\[48px\] { 
+    font-size: 24px !important; 
+    line-height: 36px !important; 
+  }
+  
+  /* Creator Growth Section */
+  section:nth-of-type(4) .h-\[400px\] { 
+    height: auto !important; 
+    padding: 24px !important; 
+  }
+  section:nth-of-type(4) .text-\[33px\] { 
+    font-size: 24px !important; 
+    line-height: 34px !important; 
+  }
+  
+  /* Built For Creators Section */
+  section:nth-of-type(5) { 
+    padding-top: 40px !important; 
+    padding-bottom: 40px !important; 
+  }
+  section:nth-of-type(5) .text-\[33px\] { 
+    font-size: 22px !important; 
+    line-height: 32px !important; 
+  }
+  section:nth-of-type(5) .w-\[224px\] { 
+    width: 100% !important; 
+    margin-bottom: 16px !important; 
+  }
+  
+  /* Content Cards Section */
+  section:nth-of-type(6) .h-\[400px\] { 
+    height: 250px !important; 
+  }
+  
+  /* About CTA Section */
+  section:nth-of-type(8) .text-\[40px\] { 
+    font-size: 26px !important; 
+    line-height: 38px !important; 
+  }
+  section:nth-of-type(8) .gap-\[80px\] { 
+    gap: 32px !important; 
+  }
+  section:nth-of-type(8) .h-\[400px\] { 
+    height: 200px !important; 
+  }
+  section:nth-of-type(8) .lg\:w-\[526px\] { 
+    width: 100% !important; 
+    padding: 0 !important; 
+  }
+  
+  /* Navbar Tweaks (Making the CTAs fit strictly within Viewport) */
+  nav a[href="/login"] span { 
+    display: none !important; 
+  }
+  nav a[href="/login"] { 
+    padding: 10px !important; 
+    border-radius: 50% !important; 
+  }
+}
