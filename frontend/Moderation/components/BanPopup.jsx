@@ -21,7 +21,7 @@ export function BanPopup({ ban, onAppeal }) {
             Submit appeal
           </button>
         ) : (
-          <p className="mt-6 text-sm text-slate-500">For support, contact support@logoipsum.app</p>
+          <p className="mt-6 text-sm text-slate-500">For support, contact support@creatorhub.app</p>
         )}
       </div>
     </div>

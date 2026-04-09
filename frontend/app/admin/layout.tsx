@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Home, Shield, DollarSign, LayoutGrid, Settings, Search, FileText, UserPlus, HelpCircle, Brush, BarChart3, Monitor, Menu, X, ClipboardList, Scale } from 'lucide-react';
 import api from '@/src/lib/api';
 import { useAuthStore } from '@/src/store/useAuthStore';
+import BrandLogo from '@/src/components/BrandLogo';
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -158,11 +159,12 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
     <>
       <div className="flex items-center justify-between gap-2 mb-6 px-2">
         <div className="flex items-center gap-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#1e293b"/>
-            <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="white"/>
-          </svg>
-          <h1 className="text-xl font-bold tracking-tight text-slate-800">logoipsum<span className="text-xs align-top">®</span></h1>
+          <BrandLogo
+            iconSize={24}
+            showTrademark
+            textClassName="text-xl font-bold tracking-tight text-slate-800"
+            trademarkClassName="text-xs align-top"
+          />
         </div>
         <button
           type="button"

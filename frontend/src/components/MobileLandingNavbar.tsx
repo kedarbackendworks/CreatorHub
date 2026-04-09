@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import BrandLogo from "@/src/components/BrandLogo";
 
 const navLinks = [
   { label: "Home", href: "/" },
@@ -22,11 +23,11 @@ export default function MobileLandingNavbar() {
   return (
     <div className="relative z-[70]">
       <nav className="flex h-[64px] items-center justify-between border-b border-[#e9e9e9] bg-white px-5">
-        <Link href="/" aria-label="Go to home" className="block h-[24px] w-[126px]">
-          <img
-            src="/assets/icons/logo ipsum logo.svg"
-            alt="logoipsum"
-            className="h-full w-full object-contain object-left"
+        <Link href="/" aria-label="Go to home" className="flex items-center gap-2">
+          <BrandLogo
+            className="inline-flex items-center gap-2"
+            iconSize={22}
+            textClassName="text-[15px] font-bold tracking-tight text-slate-800"
           />
         </Link>
 

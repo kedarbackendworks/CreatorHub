@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import BrandLogo from "@/src/components/BrandLogo";
 
 const navLinks = [
   { label: "Home", href: "/", activeOnHome: true },
@@ -21,11 +22,11 @@ export default function Navbar() {
 
   return (
     <nav className="relative z-50 flex w-full items-center justify-between border-b border-[#e9e9e9] bg-[rgba(255,254,253,0.4)] px-6 py-2 backdrop-blur-[10px] md:bg-[rgba(255,254,253,0.85)] md:px-16 md:py-[22px]">
-      <Link href="/" aria-label="Go to home" className="block h-[21px] w-[84px] shrink-0 md:h-[34px] md:w-[134px]">
-        <img
-          src="/assets/icons/logo ipsum logo.svg"
-          alt="logoipsum"
-          className="h-full w-full object-contain object-left"
+      <Link href="/" aria-label="Go to home" className="flex items-center gap-2 shrink-0">
+        <BrandLogo
+          className="inline-flex items-center gap-2"
+          iconSize={24}
+          textClassName="hidden md:inline text-xl font-bold tracking-tight text-slate-800"
         />
       </Link>
 

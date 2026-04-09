@@ -10,6 +10,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 import { useBanStore } from '@/src/store/useBanStore';
 import { useNotifications } from '@/src/hooks/useNotifications';
 import SupportNavItem from '@/UserSupport/components/SupportNavItem';
+import BrandLogo from '@/src/components/BrandLogo';
 
 const NAV_ITEMS = [
   { label: 'Home', icon: '/assets/dashboard/icon-home.svg', href: '/user' },
@@ -42,12 +43,11 @@ export default function DashboardSidebar() {
         onClick={mobile ? handleNavigate : undefined}
         className="flex items-center gap-[12px] px-[24px] py-[24px] w-full shrink-0"
       >
-        <div className="relative size-[24px] shrink-0">
-          <Image src="/assets/dashboard/icon-logo.svg" alt="Logo" fill />
-        </div>
-        <p className="font-['Inter:Medium',sans-serif] font-medium text-[#f95c4b] text-[16px] whitespace-nowrap">
-          Logo
-        </p>
+        <BrandLogo
+          iconSize={24}
+          className="inline-flex items-center gap-2"
+          textClassName="font-medium text-[16px] tracking-tight text-slate-800 whitespace-nowrap"
+        />
       </Link>
 
       <nav className="flex flex-col w-full flex-1 mt-4 gap-1">
@@ -133,12 +133,11 @@ export default function DashboardSidebar() {
     <>
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-[#faf8f5] border-b border-[#e4ded2] z-40 px-4 flex items-center justify-between">
         <Link href="/user" className="flex items-center gap-2.5">
-          <div className="relative size-5 shrink-0">
-            <Image src="/assets/dashboard/icon-logo.svg" alt="Logo" fill />
-          </div>
-          <p className="font-[family-name:var(--font-figtree)] font-semibold text-[#f95c4b] text-[15px]">
-            Logo
-          </p>
+          <BrandLogo
+            iconSize={20}
+            className="inline-flex items-center gap-2"
+            textClassName="font-semibold text-[15px] tracking-tight text-slate-800"
+          />
         </Link>
         <button
           onClick={() => setIsMobileOpen((prev) => !prev)}

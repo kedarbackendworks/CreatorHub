@@ -127,7 +127,7 @@ export default function Footer() {
             className="text-[#3a3a3a] text-[11px] tracking-[2px]"
             style={{ fontFamily: "'Figtree', sans-serif" }}
           >
-            © 2025 LOGOIPSUM. ALL RIGHTS RESERVED.
+            © 2025 CREATORHUB. ALL RIGHTS RESERVED.
           </p>
           <div
             className="flex gap-6 text-[#5a5a5a] text-[11px] font-bold tracking-[1px] md:tracking-[0.32px]"

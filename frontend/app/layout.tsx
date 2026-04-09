@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Figtree, Lexend, Comfortaa } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Footer from "../src/components/Footer";
 import { Toaster } from 'react-hot-toast';
@@ -34,12 +35,35 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const stripInjectedAttrs = `
+    (() => {
+      const removeInjectedAttrs = () => {
+        const nodes = document.querySelectorAll('[fdprocessedid]');
+        nodes.forEach((node) => node.removeAttribute('fdprocessedid'));
+      };
+
+      removeInjectedAttrs();
+      const observer = new MutationObserver(removeInjectedAttrs);
+      observer.observe(document.documentElement, {
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['fdprocessedid'],
+      });
+    })();
+  `;
+
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${figtree.variable} ${lexend.variable} ${comfortaa.variable} h-full antialiased`}
     >
       <head>
+        <Script
+          id="strip-fdprocessedid"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: stripInjectedAttrs }}
+        />
         <link
           href="https://fonts.googleapis.com/css2?family=Fjalla+One&display=swap"
           rel="stylesheet"

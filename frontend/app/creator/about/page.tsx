@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import api from '@/src/lib/api';
 import { Camera, Edit, Share, Diamond, Zap, MessageSquare, ArrowLeft, Send, CheckCircle2, ChevronDown, Radio, ChevronRight, ChevronLeft } from 'lucide-react';
+import BrandLogo from '@/src/components/BrandLogo';
 
 export default function CreatorAboutPage() {
   const [creator, setCreator] = useState<any>(null);
@@ -27,7 +28,11 @@ export default function CreatorAboutPage() {
       {/* Top Navigation */}
       <nav className="fixed top-0 left-0 right-0 h-28 bg-white/60 backdrop-blur-xl border-b border-white px-12 z-[100] flex items-center justify-between">
          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-rose-500 rounded-xl flex items-center justify-center text-white font-black text-xs shadow-lg">logo</div>
+                  <BrandLogo
+                     iconSize={28}
+                     className="inline-flex items-center gap-3"
+                     textClassName="text-[24px] font-bold tracking-tight text-slate-800"
+                  />
          </div>
          <div className="flex items-center gap-3">
             <button className="px-6 py-2.5 bg-white border border-slate-200 rounded-full text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">

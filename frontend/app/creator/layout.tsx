@@ -15,6 +15,7 @@ import SubscriptionNavItem from '@/CreatorSubscription/components/SubscriptionNa
 import OnboardingSubscriptionPopup from '@/CreatorSubscription/components/OnboardingSubscriptionPopup';
 import { useSubscription } from '@/CreatorSubscription/hooks/useSubscription';
 import { useOnboardingPopup } from '@/CreatorSubscription/hooks/useOnboardingPopup';
+import BrandLogo from '@/src/components/BrandLogo';
 
 export default function CreatorLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -77,6 +78,14 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
 
   const isBanned = Boolean(activeBan?.isActive);
   const showAppealBadge = isBanned && canAppeal;
+  const subscriptionData =
+    subscription && typeof subscription === 'object'
+      ? (subscription as Record<string, unknown>)
+      : null;
+  const currentPlan =
+    typeof subscriptionData?.plan === 'string' ? subscriptionData.plan : 'free';
+  const currentStatus =
+    typeof subscriptionData?.status === 'string' ? subscriptionData.status : 'active';
 
   const activateFreeFromPopup = async () => {
     try {
@@ -128,11 +137,12 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
       {/* Sidebar */}
       <aside className={`w-[280px] bg-[#f9f9f9] flex flex-col pt-6 pb-6 h-screen fixed lg:sticky top-0 left-0 border-r border-slate-200/60 shrink-0 z-40 lg:z-20 transition-transform duration-300 ${mobileNavOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="flex items-center gap-3 px-8 mb-10">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" fill="#ff5a36"/>
-            <path d="M8 12L12 8L16 12L12 16L8 12Z" fill="white"/>
-          </svg>
-          <h1 className="text-xl font-bold tracking-tight text-slate-800">logoipsum<span className="text-xs align-top font-black">®</span></h1>
+          <BrandLogo
+            iconSize={24}
+            showTrademark
+            textClassName="text-xl font-bold tracking-tight text-slate-800"
+            trademarkClassName="text-xs align-top font-black"
+          />
         </div>
 
         <nav className="flex-1 overflow-y-auto px-5">
@@ -167,8 +177,8 @@ export default function CreatorLayout({ children }: { children: React.ReactNode 
             Appeal
           </Link>
           <SubscriptionNavItem
-            currentPlan={subscription?.plan ?? 'free'}
-            status={subscription?.status ?? 'active'}
+            currentPlan={currentPlan}
+            status={currentStatus}
             className={isActive('/creator/subscription')}
           />
           {isBanned ? (

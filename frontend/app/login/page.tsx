@@ -10,6 +10,7 @@ import { useAuthStore } from "@/src/store/useAuthStore";
 import { useBanStore } from "@/src/store/useBanStore";
 import toast from "react-hot-toast";
 import CaptchaChallenge from "@/src/components/common/CaptchaChallenge";
+import BrandLogo from "@/src/components/BrandLogo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -74,12 +75,12 @@ export default function LoginPage() {
         {/* Left Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center gap-8 py-10">
           
-          {/* Logo Placeholder */}
-          <Link href="/" className="flex items-center gap-2 mb-4">
-            <div className="flex text-[#ff4c24] items-center text-[28px] tracking-tight font-bold">
-              <span className="text-3xl">🛡</span>
-              <span style={{ fontFamily: "'Fjalla One', sans-serif" }}>Renown</span>
-            </div>
+          <Link href="/" className="mb-4">
+            <BrandLogo
+              iconSize={30}
+              className="inline-flex items-center gap-3"
+              textClassName="text-[30px] font-bold tracking-tight text-slate-800"
+            />
           </Link>
 
           {/* Heading */}

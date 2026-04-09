@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import { Camera, Mic, MicOff, CameraOff, Users, MessageSquare, Send, Smile, Maximize2, AlertCircle } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSocket } from '@/src/hooks/useSocket';
@@ -10,7 +10,7 @@ import { useAuthStore } from '@/src/store/useAuthStore';
 import api from '@/src/lib/api';
 import toast from 'react-hot-toast';
 
-export default function ActiveLivestreamPage() {
+function ActiveLivestreamContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const streamId = searchParams.get('streamId');
@@ -281,5 +281,19 @@ export default function ActiveLivestreamPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function ActiveLivestreamPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-[calc(100vh-72px)] bg-[#0f0f0f]">
+          <p className="text-sm font-semibold text-white/70">Loading livestream...</p>
+        </div>
+      }
+    >
+      <ActiveLivestreamContent />
+    </Suspense>
   );
 }
