@@ -5,7 +5,6 @@ const categories = [
   "BUSINESS", "LIFESTYLE", "CONTENT", "EDUCATION",
 ];
 
-/* Six-pointed asterisk SVG matching Figma's icon/asterisk */
 function AsteriskIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -26,35 +25,31 @@ function AsteriskIcon({ className }: { className?: string }) {
 }
 
 export default function Marquee({ animate = true }: { animate?: boolean }) {
-  // Keep one segment wider than desktop viewport so translateX(-50%)
-  // stays continuous with no visible empty gaps.
-  const segment = [...categories, ...categories, ...categories, ...categories];
+  const unit = [...categories];
 
-  const renderSegment = (keyPrefix: string, hidden = false) => (
+  const renderUnit = (keyPrefix: string, hidden = false) => (
     <div
       aria-hidden={hidden ? true : undefined}
       className="inline-flex h-full items-center whitespace-nowrap"
-      style={{ gap: "14px" }}
     >
-      {segment.map((cat, i) => (
+      {unit.map((cat, i) => (
         <div
           key={`${keyPrefix}-${i}`}
-          className="flex shrink-0 items-center"
-          style={{ gap: "14px" }}
+          className="flex shrink-0 items-center gap-3 md:gap-8"
         >
           <span
             className="text-[#3a3a3a]"
             style={{
               fontFamily: "'Fjalla One', sans-serif",
-              fontSize: "14px",
-              fontWeight: 600,
-              lineHeight: "1",
-              letterSpacing: "0.05em",
+              fontSize: "clamp(22px, 2vw, 28px)",
+              fontWeight: 400,
+              lineHeight: "1.5",
+              letterSpacing: "0.02em",
             }}
           >
             {cat}
           </span>
-          <AsteriskIcon className="size-4 shrink-0" />
+          <AsteriskIcon className="size-5 shrink-0 text-[#3a3a3a] md:size-8" />
         </div>
       ))}
     </div>
@@ -62,14 +57,14 @@ export default function Marquee({ animate = true }: { animate?: boolean }) {
 
   return (
     <>
-      <div className="relative z-20 w-full">
-        <div className="relative h-11 w-full overflow-hidden border-y border-[#d9d3c8] bg-[#e4ded2] p-0">
+      <div className="relative z-20 w-full overflow-x-clip">
+        <div className="relative left-1/2 w-[calc(100%+80px)] -translate-x-1/2 -rotate-[1.5deg] overflow-hidden border-y border-[#d9d3c8] bg-[#e4ded2]">
           <div
-            className={`marquee-track inline-flex h-full min-w-max items-center whitespace-nowrap leading-none ${animate ? "marquee-slide" : ""}`}
-            style={{ gap: "14px", padding: "0 14px" }}
+            className={`marquee-track inline-flex h-[56px] min-w-max items-center whitespace-nowrap px-4 leading-none md:h-[74px] md:px-6 ${animate ? "marquee-slide" : ""}`}
+            style={{ gap: "16px" }}
           >
-            {renderSegment("primary")}
-            {renderSegment("clone", true)}
+            {renderUnit("primary")}
+            {renderUnit("clone", true)}
           </div>
         </div>
       </div>
@@ -84,7 +79,7 @@ export default function Marquee({ animate = true }: { animate?: boolean }) {
           }
         }
         .marquee-slide {
-          animation: marquee-slide 60s linear infinite;
+          animation: marquee-slide 45s linear infinite;
           will-change: transform;
         }
       `}</style>

@@ -12,8 +12,28 @@ const multer = require('multer');
 const streamifier = require('streamifier');
 const cloudinary = require('../utils/cloudinary');
 const { getPlatformFee } = require('../../frontend/CreatorSubscription/utils/subscriptionHelpers');
+const { getJwtSecret, isLikelyJwt } = require('../utils/authSecurity');
 
 const profileUpload = multer({ storage: multer.memoryStorage() }).single('avatar');
+
+const getOptionalUserIdFromBearer = (req) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const token = authHeader.split(' ')[1]?.trim();
+  if (!isLikelyJwt(token)) {
+    return null;
+  }
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    return decoded?.id || null;
+  } catch (error) {
+    return null;
+  }
+};
 
 const getPostAccessInfo = ({ post, memberships = [], userId = null, isAdmin = false }) => {
   if (isAdmin) {
@@ -190,14 +210,8 @@ exports.getCreatorProfile = async (req, res) => {
     // Check if user is authenticated
     if (req.user) {
       userId = req.user._id;
-    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      try {
-        const token = req.headers.authorization.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-        userId = decoded.id;
-      } catch (e) {
-        // Token invalid, ignore
-      }
+    } else {
+      userId = getOptionalUserIdFromBearer(req);
     }
 
     if (userId) {
@@ -250,16 +264,12 @@ exports.getCreatorPosts = async (req, res) => {
       const user = await User.findById(userId);
       memberships = user?.memberships || [];
       isAdmin = user?.role === 'admin';
-    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      try {
-        const token = req.headers.authorization.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-        userId = decoded.id;
+    } else {
+      userId = getOptionalUserIdFromBearer(req);
+      if (userId) {
         const user = await User.findById(userId);
         memberships = user?.memberships || [];
         isAdmin = user?.role === 'admin';
-      } catch (e) {
-        // Token invalid, ignore
       }
     }
 
@@ -348,14 +358,8 @@ exports.getPostDetails = async (req, res) => {
 
     if (req.user) {
       userId = req.user._id;
-    } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      try {
-        const token = req.headers.authorization.split(' ')[1];
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
-        userId = decoded.id;
-      } catch (e) {
-        // Token invalid, ignore
-      }
+    } else {
+      userId = getOptionalUserIdFromBearer(req);
     }
 
     let isFavorited = false;

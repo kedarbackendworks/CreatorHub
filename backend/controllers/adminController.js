@@ -3,6 +3,7 @@ const Creator = require('../models/Creator');
 const Wallet = require('../models/Wallet');
 const Post = require('../models/Post');
 const { AppUser, AppReport, AppTransaction, AppTicket, AppSetting, AppDashboard } = require('../models/AdminData');
+const { isValidSessionId, timingSafeStringEqual } = require('../utils/authSecurity');
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS_UPPER = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
@@ -776,11 +777,11 @@ exports.getAdminSessions = async (req, res) => {
 exports.revokeAdminSession = async (req, res) => {
   try {
     const { sessionId } = req.params;
-    if (!sessionId) {
-      return res.status(400).json({ message: 'sessionId is required' });
+    if (!isValidSessionId(sessionId)) {
+      return res.status(400).json({ message: 'Invalid sessionId format' });
     }
 
-    if (sessionId === req.sessionId) {
+    if (timingSafeStringEqual(sessionId, req.sessionId)) {
       return res.status(400).json({ message: 'Current session cannot be revoked from this action' });
     }
 
@@ -789,12 +790,12 @@ exports.revokeAdminSession = async (req, res) => {
       return res.status(404).json({ message: 'Admin user not found' });
     }
 
-    const exists = (user.sessions || []).some((session) => session.sessionId === sessionId);
+    const exists = (user.sessions || []).some((session) => timingSafeStringEqual(session.sessionId, sessionId));
     if (!exists) {
       return res.status(404).json({ message: 'Session not found' });
     }
 
-    user.sessions = (user.sessions || []).filter((session) => session.sessionId !== sessionId);
+    user.sessions = (user.sessions || []).filter((session) => !timingSafeStringEqual(session.sessionId, sessionId));
     await user.save({ validateBeforeSave: false });
 
     res.status(200).json({ message: 'Session revoked successfully' });
@@ -811,7 +812,7 @@ exports.revokeAllOtherAdminSessions = async (req, res) => {
     }
 
     const beforeCount = (user.sessions || []).length;
-    user.sessions = (user.sessions || []).filter((session) => session.sessionId === req.sessionId);
+    user.sessions = (user.sessions || []).filter((session) => timingSafeStringEqual(session.sessionId, req.sessionId));
     const removedCount = beforeCount - user.sessions.length;
 
     await user.save({ validateBeforeSave: false });

@@ -1,27 +1,36 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { getRuntimeSecuritySettings } = require('../utils/securitySettings');
+const {
+  getJwtSecret,
+  isLikelyJwt,
+  isValidSessionId,
+  timingSafeStringEqual,
+} = require('../utils/authSecurity');
+const { logAuthEvent } = require('../utils/authLogger');
 
 const SESSION_ACTIVITY_REFRESH_MS = 60 * 1000;
 
 const protect = async (req, res, next) => {
-  let token;
-
   const attachUserFromToken = async (rawToken) => {
-    const decoded = jwt.verify(rawToken, process.env.JWT_SECRET || 'secret123');
+    const decoded = jwt.verify(rawToken, getJwtSecret());
     const { sessionTimeoutMs } = await getRuntimeSecuritySettings();
+
+    if (!decoded?.id) {
+      return { ok: false, status: 401, message: 'Not authorized, invalid token' };
+    }
 
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
       return { ok: false, status: 401, message: 'Not authorized, user not found' };
     }
 
-    if (!decoded.sessionId) {
+    if (!isValidSessionId(decoded.sessionId)) {
       return { ok: false, status: 401, message: 'Not authorized, invalid session' };
     }
 
     const session = Array.isArray(user.sessions)
-      ? user.sessions.find((item) => item.sessionId === decoded.sessionId)
+      ? user.sessions.find((item) => timingSafeStringEqual(item.sessionId, decoded.sessionId))
       : null;
 
     if (!session) {
@@ -40,7 +49,7 @@ const protect = async (req, res, next) => {
       && nowMs - activityMs > sessionTimeoutMs;
 
     if (isTimedOut) {
-      user.sessions = user.sessions.filter((item) => item.sessionId !== decoded.sessionId);
+      user.sessions = user.sessions.filter((item) => !timingSafeStringEqual(item.sessionId, decoded.sessionId));
       await user.save({ validateBeforeSave: false });
       return { ok: false, status: 401, message: 'Not authorized, session expired' };
     }
@@ -58,45 +67,37 @@ const protect = async (req, res, next) => {
     return { ok: true };
   };
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith('Bearer')
-  ) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-
-      const result = await attachUserFromToken(token);
-      if (!result.ok) {
-        return res.status(result.status).json({ message: result.message });
-      }
-
-      next();
-    } catch (error) {
-      return res.status(401).json({
-        message: error.name === 'TokenExpiredError'
-          ? 'Not authorized, token expired'
-          : 'Not authorized, invalid token'
-      });
-    }
-  }
-
-  if (!token && req.query?.token) {
-    try {
-      token = req.query.token;
-
-      const result = await attachUserFromToken(token);
-      if (!result.ok) {
-        return res.status(result.status).json({ message: result.message });
-      }
-
-      return next();
-    } catch (error) {
-      return res.status(401).json({ message: 'Not authorized, invalid token' });
-    }
-  }
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.startsWith('Bearer ')
+    ? authHeader.split(' ')[1]?.trim()
+    : '';
 
   if (!token) {
+    logAuthEvent('auth.denied', req, { reason: 'missing_bearer_token' }, 'warn');
     return res.status(401).json({ message: 'Not authorized, no token' });
+  }
+
+  if (!isLikelyJwt(token)) {
+    logAuthEvent('auth.denied', req, { reason: 'malformed_token' }, 'warn');
+    return res.status(401).json({ message: 'Not authorized, invalid token' });
+  }
+
+  try {
+    const result = await attachUserFromToken(token);
+    if (!result.ok) {
+      logAuthEvent('auth.denied', req, { reason: result.message }, 'warn');
+      return res.status(result.status).json({ message: result.message });
+    }
+
+    logAuthEvent('auth.granted', req, { reason: 'token_verified' });
+    return next();
+  } catch (error) {
+    const message = error.name === 'TokenExpiredError'
+      ? 'Not authorized, token expired'
+      : 'Not authorized, invalid token';
+
+    logAuthEvent('auth.denied', req, { reason: error.name || 'verify_failed' }, 'warn');
+    return res.status(401).json({ message });
   }
 };
 

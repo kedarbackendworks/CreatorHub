@@ -14,6 +14,7 @@ const {
   evaluateDisposableEmail,
 } = require('../utils/disposableEmail');
 const { checkFlagged } = require('../../frontend/Moderation/services/flaggedIdentity.service');
+const { logAuthEvent } = require('../utils/authLogger');
 
 const DEFAULT_TERMS_OF_SERVICE =
   '## Platform Usage Rules\n1. Users must be 18+...\n2. All content must comply with global standards...';
@@ -89,6 +90,12 @@ const issueSessionToken = async (user, req) => {
 
   user.lastLogin = new Date();
   await user.save({ validateBeforeSave: false });
+
+  logAuthEvent('auth.session.issued', req, {
+    userId: String(user._id),
+    role: user.role,
+    sessionId,
+  });
 
   return generateToken(user._id, sessionId);
 };
@@ -248,11 +255,22 @@ const loginUser = async (req, res) => {
   const { email, password } = req.body;
   const normalizedEmail = normalizeEmailAddress(email);
 
+  if (!normalizedEmail || !isValidEmailFormat(normalizedEmail)) {
+    logAuthEvent('auth.login.denied', req, { reason: 'invalid_email_format' }, 'warn');
+    return res.status(400).json({ message: 'Please enter a valid email address' });
+  }
+
+  if (typeof password !== 'string' || !password.trim()) {
+    logAuthEvent('auth.login.denied', req, { reason: 'missing_password' }, 'warn');
+    return res.status(400).json({ message: 'Password is required' });
+  }
+
   try {
     const user = await User.findOne({ email: normalizedEmail });
 
     if (user && (await user.matchPassword(password))) {
       const token = await issueSessionToken(user, req);
+      logAuthEvent('auth.login.success', req, { userId: String(user._id), role: user.role });
       res.json({
         _id: user._id,
         name: user.name,
@@ -268,11 +286,13 @@ const loginUser = async (req, res) => {
     // Fallback: allow AdminManagement credentials to log in via shared auth.
     const admin = await Admin.findOne({ email: normalizedEmail });
     if (!admin || admin.status !== 'active') {
+      logAuthEvent('auth.login.denied', req, { reason: 'invalid_credentials' }, 'warn');
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
     const isAdminPasswordValid = await bcrypt.compare(password, admin.password);
     if (!isAdminPasswordValid) {
+      logAuthEvent('auth.login.denied', req, { reason: 'invalid_credentials' }, 'warn');
       return res.status(401).json({ message: 'Invalid email or password' });
     }
 
@@ -312,6 +332,7 @@ const loginUser = async (req, res) => {
     }
 
     const token = await issueSessionToken(linkedUser, req);
+    logAuthEvent('auth.login.success', req, { userId: String(linkedUser._id), role: linkedUser.role });
 
     return res.json({
       _id: linkedUser._id,
@@ -323,6 +344,7 @@ const loginUser = async (req, res) => {
       token,
     });
   } catch (error) {
+    logAuthEvent('auth.login.error', req, { reason: error.message }, 'error');
     res.status(500).json({ message: error.message });
   }
 };
@@ -429,8 +451,19 @@ const forgotPassword = async (req, res) => {
 const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
-  if (!token || !newPassword) {
+  const normalizedToken = typeof token === 'string' ? token.trim() : '';
+  const hasValidTokenFormat = /^[a-f0-9]{64}$/i.test(normalizedToken);
+
+  if (!normalizedToken || !newPassword) {
     return res.status(400).json({ message: 'Token and new password are required' });
+  }
+
+  if (!hasValidTokenFormat) {
+    return res.status(400).json({ message: 'Invalid reset token format' });
+  }
+
+  if (typeof newPassword !== 'string' || !newPassword.trim()) {
+    return res.status(400).json({ message: 'New password is required' });
   }
 
   try {
@@ -442,7 +475,7 @@ const resetPassword = async (req, res) => {
     }
 
     const user = await User.findOne({
-      resetPasswordToken: token,
+      resetPasswordToken: normalizedToken,
       resetPasswordExpires: { $gt: Date.now() },
     });
 
