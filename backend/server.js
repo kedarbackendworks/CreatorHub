@@ -13,6 +13,14 @@ const supportTicketRoutes = require('../frontend/SupportTickets/routes/ticket.ro
 const { initCronJobs } = require('./config/cronJobs');
 const reportsRoutes = require('./src/modules/reports/reports.routes');
 const appealsRoutes = require('./src/modules/appeals/appeals.routes');
+const { assertJwtSecretStrengthAtStartup } = require('./utils/authSecurity');
+
+try {
+  assertJwtSecretStrengthAtStartup();
+} catch (error) {
+  console.error(`Startup aborted: ${error.message}`);
+  process.exit(1);
+}
 
 const app = express();
 const server = http.createServer(app);
