@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import api from '@/src/lib/api';
 import { UploadCloud, Image as ImageIcon, Video, X, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function NewPost() {
@@ -44,7 +44,7 @@ export default function NewPost() {
     formData.append('isExclusive', isExclusive.toString());
 
     try {
-      await axios.post('http://localhost:5001/api/admin/posts', formData, {
+      await api.post('/admin/posts', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },

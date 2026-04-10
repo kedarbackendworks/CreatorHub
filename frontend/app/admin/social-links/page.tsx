@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/src/lib/api';
 import { Camera, Globe, Hash, PlaySquare, Save, Link as LinkIcon, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function SocialLinks() {
@@ -21,7 +21,7 @@ export default function SocialLinks() {
 
   const fetchSocialLinks = async () => {
     try {
-      const res = await axios.get('http://localhost:5001/api/admin/social-links');
+      const res = await api.get('/admin/social-links');
       if (res.data) setLinks(res.data);
     } catch (err) {
       console.error(err);
@@ -33,7 +33,7 @@ export default function SocialLinks() {
   const handleSave = async (platform: string) => {
     setSaving(platform);
     try {
-      await axios.post('http://localhost:5001/api/admin/social-links', {
+      await api.post('/admin/social-links', {
         platform,
         url: links[platform as keyof typeof links]
       });

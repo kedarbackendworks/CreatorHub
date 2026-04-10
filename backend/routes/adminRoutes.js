@@ -5,6 +5,13 @@ const { checkBan } = require('../../frontend/Moderation/middleware/checkBan.midd
 const { superAdminOnly } = require('../../frontend/AdminManagement/middleware/superAdminOnly.middleware');
 const { approveEnterpriseHandler } = require('../../frontend/CreatorSubscription/controllers/subscription.controller');
 const {
+	createPost,
+	getPosts,
+	deletePost,
+	updateSocialLinks,
+	getSocialLinks,
+} = require('../controllers/creatorController');
+const {
 	getAllData,
 	updateUser,
 	deleteUser,
@@ -40,6 +47,13 @@ router.post('/settings/reset', resetSettings);
 router.get('/sessions', getAdminSessions);
 router.delete('/sessions/:sessionId', revokeAdminSession);
 router.delete('/sessions', revokeAllOtherAdminSessions);
+
+// Content Management (admin-facing pages)
+router.get('/posts', getPosts);
+router.post('/posts', createPost);
+router.delete('/posts/:id', deletePost);
+router.get('/social-links', getSocialLinks);
+router.post('/social-links', updateSocialLinks);
 
 // Platform Settings
 router.get('/platform/settings', getPlatformSettings);

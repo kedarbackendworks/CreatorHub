@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '@/src/lib/api';
 import { Edit2, Archive, Trash2, Eye, MessageCircle, Heart, Search, Image as ImageIcon, Video, Calendar, MoreVertical, ShieldCheck, FileWarning, ExternalLink, Loader2 } from 'lucide-react';
 
 export default function ManagePosts() {
@@ -16,7 +16,7 @@ export default function ManagePosts() {
 
   const fetchPosts = async () => {
     try {
-      const res = await axios.get('http://localhost:5001/api/admin/posts');
+      const res = await api.get('/admin/posts');
       setPosts(res.data);
     } catch (err) {
       console.error(err);
@@ -31,7 +31,7 @@ export default function ManagePosts() {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:5001/api/admin/posts/${id}`);
+      await api.delete(`/admin/posts/${id}`);
       setPosts(posts.filter(p => p._id !== id));
     } catch (err) {
       console.error(err);
