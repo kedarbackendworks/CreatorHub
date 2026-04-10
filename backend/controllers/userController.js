@@ -174,21 +174,46 @@ exports.updateUserProfile = async (req, res) => {
 // @route   GET /api/user/creators
 exports.getCreators = async (req, res) => {
   try {
-    const creators = await Creator.find({ status: 'active' }).sort({ createdAt: -1 });
-    
-    // Attach recent posts to each creator
-    const creatorsWithPosts = await Promise.all(creators.map(async (creator) => {
-      const posts = await Post.find({
-        creatorId: creator._id,
-        status: 'published',
-        policyViolationLocked: { $ne: true },
-      })
-        .sort({ createdAt: -1 })
-        .limit(6);
-      return {
-        ...creator._doc,
-        posts
-      };
+    const creators = await Creator.find({ status: 'active' })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!creators.length) {
+      return res.json([]);
+    }
+
+    const creatorIds = creators.map((creator) => creator._id);
+
+    // Batch fetch posts once and keep only the latest 6 per creator.
+    const groupedPosts = await Post.aggregate([
+      {
+        $match: {
+          creatorId: { $in: creatorIds },
+          status: 'published',
+          policyViolationLocked: { $ne: true },
+        },
+      },
+      { $sort: { creatorId: 1, createdAt: -1 } },
+      {
+        $group: {
+          _id: '$creatorId',
+          posts: { $push: '$$ROOT' },
+        },
+      },
+      {
+        $project: {
+          posts: { $slice: ['$posts', 6] },
+        },
+      },
+    ]);
+
+    const postsByCreatorId = new Map(
+      groupedPosts.map((entry) => [String(entry._id), entry.posts])
+    );
+
+    const creatorsWithPosts = creators.map((creator) => ({
+      ...creator,
+      posts: postsByCreatorId.get(String(creator._id)) || [],
     }));
 
     res.json(creatorsWithPosts);
